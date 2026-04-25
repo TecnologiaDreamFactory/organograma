@@ -1,0 +1,565 @@
+﻿    :root {
+      --bg-0: #0c0b09;
+      --bg-1: #151311;
+      --panel: #141210;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #f2efe9;
+      --text-muted: #8f8980;
+      --text-subtle: #6a645c;
+      --text-strong: #faf7f2;
+      --list-border: rgba(255, 255, 255, 0.08);
+      --ball-fg: #f7f4ef;
+      /* Azul único (como o da área antes), sem gradiente — #2563eb ≈ meio entre #1d4ed8 e #3b82f6 */
+      --node-blue: #2563eb;
+      --node-blue-hover: #3b82f6;
+      --node-president: var(--node-blue);
+      --node-president-h: var(--node-blue-hover);
+      --node-director: var(--node-blue);
+      --node-area: var(--node-blue);
+      --node-ring: rgba(255, 255, 255, 0.18);
+      --node-ring-press: rgba(255, 255, 255, 0.38);
+      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 10px rgba(0, 0, 0, 0.35);
+      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 4px rgba(0, 0, 0, 0.28);
+      --area-focus: rgba(255, 255, 255, 0.95);
+      /* Alinhar título (organograma) e cabeçalho do painel na mesma faixa, em 2 colunas. */
+      --app-title-line-h: clamp(1.75rem, 4.5vw, 2.5rem);
+      --app-chart-pad-t: clamp(1.1rem, 2.6vh, 1.9rem);
+      --app-header-gap-b: clamp(0.5rem, 1.2vh, 0.9rem);
+    }
+
+    html[data-theme="light"] {
+      --bg-0: #f3efea;
+      --bg-1: #e8e2da;
+      --panel: #ffffff;
+      --panel-border: rgba(0, 0, 0, 0.1);
+      --text: #1a1815;
+      --text-muted: #5b544d;
+      --text-subtle: #756c64;
+      --text-strong: #0c0a08;
+      --list-border: rgba(0, 0, 0, 0.1);
+      --ball-fg: #fdf9f3;
+      --node-blue: #2563eb;
+      --node-blue-hover: #3b82f6;
+      --node-president: var(--node-blue);
+      --node-president-h: var(--node-blue-hover);
+      --node-director: var(--node-blue);
+      --node-area: var(--node-blue);
+      --node-ring: rgba(255, 255, 255, 0.22);
+      --node-ring-press: rgba(255, 255, 255, 0.4);
+      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 2px 8px rgba(0, 0, 0, 0.12);
+      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 1px 3px rgba(0, 0, 0, 0.1);
+      /* Seleção da área: contorno claro no dark, escuro no light (`.ball--area[aria-pressed="true"]`). */
+      --area-focus: rgba(12, 10, 8, 0.92);
+    }
+
+    html { color-scheme: dark; -webkit-font-smoothing: antialiased; }
+    html[data-theme="light"] { color-scheme: light; }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100dvh;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      /* `stable` reserva faixa fixa à direita (pior no Windows) e parece “gap” extra até ao painel / borda. */
+      scrollbar-gutter: auto;
+      overflow-anchor: none;
+    }
+
+    body {
+      font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg-0);
+      background-image: linear-gradient(168deg, var(--bg-1) 0%, var(--bg-0) 52%, #080705 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    html[data-theme="light"] body {
+      background-image: linear-gradient(168deg, #f7f1ea 0%, var(--bg-0) 50%, #e5ddd4 100%);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      border: 1px solid var(--panel-border);
+      border-radius: 0.2rem;
+      background: var(--panel);
+      color: var(--text-muted);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .theme-toggle:hover {
+      color: var(--text);
+      background: var(--bg-0);
+    }
+
+    .theme-toggle:active {
+      transform: scale(0.95);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--text-muted);
+      outline-offset: 2px;
+    }
+
+    .theme-toggle__icon {
+      display: block;
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    html[data-theme="dark"] .theme-toggle__icon--sun { display: block; }
+    html[data-theme="dark"] .theme-toggle__icon--moon { display: none; }
+    html[data-theme="light"] .theme-toggle__icon--sun { display: none; }
+    html[data-theme="light"] .theme-toggle__icon--moon { display: block; }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) min(38vw, 400px);
+      grid-template-areas: "chart panel";
+      gap: 0;
+      column-gap: 0;
+      row-gap: 0;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      flex: 1 1 auto;
+      min-height: 0;
+      align-items: stretch;
+      align-content: stretch;
+      isolation: isolate;
+    }
+
+    .app-footer {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 0.85rem 1rem 1.1rem;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--text-subtle);
+      border-top: 1px solid var(--panel-border);
+      background: var(--bg-0);
+    }
+
+    .app-footer p {
+      margin: 0;
+    }
+
+    @media (max-width: 960px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        grid-template-areas:
+          "chart"
+          "panel";
+      }
+    }
+
+    .app__chart {
+      grid-area: chart;
+      position: relative;
+      z-index: 2;
+      /* Mais espaço no topo: título e organograma “descem” e a expansão cria menos sensação de salto */
+      /* Sem padding direito: coluna do gráfico encosta no painel (evita “faixa” entre as duas áreas). */
+      padding: var(--app-chart-pad-t) 0 clamp(0.75rem, 2vw, 1.5rem) clamp(0.5rem, 1.2vw, 1rem);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-gutter: auto;
+      overflow-anchor: none;
+      -webkit-overflow-scrolling: touch;
+      /* flex-start: título fixo no topo; overflow-anchor: evita “salto” ao crescer o hub */
+    }
+
+    .app__inner {
+      width: 100%;
+      max-width: min(100%, min(92vw, 640px));
+      min-width: 0;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      overflow-anchor: none;
+      box-sizing: border-box;
+    }
+
+    /* Cabeçalho fora de .app__inner: ocupa 100% da coluna do gráfico (não fica preso ao max-width 640px do inner). */
+    .app__chart > .title {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      min-width: 0;
+      min-height: var(--app-title-line-h);
+      margin: 0 0 var(--app-header-gap-b) 0;
+      /* Respiro em relação ao painel (overview): só uns px no título, sem mexer no hub. */
+      padding: 0 clamp(6px, 0.55vw, 10px) 0 0;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 5;
+      gap: 0.75rem;
+    }
+
+    .app__chart > .title .title__logo-link {
+      display: block;
+      flex: 0 0 auto;
+      line-height: 0;
+      text-decoration: none;
+      color: inherit;
+      transform-origin: left center;
+      transition: transform 0.22s ease;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      z-index: 2;
+    }
+
+    .app__chart > .title .title__logo-link:hover,
+    .app__chart > .title .title__logo-link:focus-visible {
+      transform: scale(1.3);
+    }
+
+    .app__chart > .title .title__logo-link:focus-visible {
+      outline: 2px solid var(--text-muted);
+      outline-offset: 3px;
+      border-radius: 0.2rem;
+    }
+
+    .app__chart > .title .title__logo {
+      display: block;
+      width: auto;
+      height: clamp(1.75rem, 4.5vw, 2.5rem);
+      max-width: min(40vw, 140px);
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    /* Halo cinza (light): raio maior = sensação de destaque em volta da logo. */
+    html[data-theme="light"] .app__chart > .title .title__logo {
+      filter:
+        drop-shadow(0 0 2px rgba(80, 76, 70, 0.65))
+        drop-shadow(0 0 6px rgba(100, 95, 88, 0.45))
+        drop-shadow(0 0 14px rgba(115, 108, 100, 0.28));
+    }
+
+    .app__chart > .title h1 {
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 0;
+      font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      text-transform: none;
+      color: var(--text);
+      min-width: 0;
+      text-align: right;
+    }
+
+    @media (max-width: 480px) {
+      .app__chart > .title {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
+      .app__chart > .title h1 {
+        flex: 1 0 100%;
+        text-align: left;
+        order: 2;
+      }
+      .app__chart > .title .title__logo-link {
+        order: 1;
+      }
+    }
+
+    /*
+      Altura e largura vêm SÓ do CSS. Nada de minHeight/minWidth no JS: qualquer
+      alteração no tamanho do #hub desloca o ponto 50% / 50% (presidente + anel) e “dá a volta” tudo.
+    */
+    .hub {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      height: min(76dvh, 800px);
+      min-height: min(72dvh, 640px);
+      max-height: min(80dvh, 820px);
+      margin: 0 auto;
+      display: block;
+      overflow: hidden;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .ball {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: none;
+      cursor: default;
+      font: inherit;
+      color: var(--ball-fg);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      -webkit-tap-highlight-color: transparent;
+      will-change: transform, opacity;
+    }
+
+    .ball--president {
+      z-index: 25;
+      width: clamp(100px, 28vw, 160px);
+      height: clamp(100px, 28vw, 160px);
+      cursor: pointer;
+      background: var(--node-president);
+      box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
+      font-size: clamp(0.7rem, 1.9vw, 0.9rem);
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 0.4rem;
+      flex-direction: column;
+      gap: 0.12rem;
+    }
+
+    .ball__role {
+      font-size: 0.5em;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .ball--president:hover {
+      background: var(--node-president-h);
+    }
+
+    .ball--director {
+      z-index: 12;
+      width: clamp(78px, 20vw, 110px);
+      height: clamp(78px, 20vw, 110px);
+      font-size: clamp(0.58rem, 1.5vw, 0.72rem);
+      font-weight: 500;
+      line-height: 1.1;
+      padding: 0.3rem 0.25rem;
+      word-break: break-word;
+      hyphens: auto;
+      background: var(--node-director);
+      box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
+      cursor: pointer;
+    }
+
+    .ball--director[aria-pressed="true"] {
+      box-shadow: 0 0 0 2px var(--node-ring-press), var(--node-shadow);
+    }
+
+    .ball--director[data-index="6"] {
+      z-index: 18;
+    }
+
+    .ball--director:hover {
+      z-index: 22;
+    }
+
+    .ball--area {
+      z-index: 16;
+      width: clamp(64px, 16vw, 96px);
+      height: clamp(64px, 16vw, 96px);
+      font-size: clamp(0.5rem, 1.25vw, 0.65rem);
+      font-weight: 500;
+      line-height: 1.1;
+      padding: 0.3rem;
+      background: var(--node-area);
+      box-shadow: 0 0 0 1px var(--node-ring), var(--area-shadow);
+      cursor: pointer;
+    }
+
+    .ball--area[aria-pressed="true"] {
+      box-shadow: 0 0 0 2px var(--area-focus);
+    }
+
+    .hint {
+      margin-top: clamp(0.4rem, 1.5vh, 0.8rem);
+      font-size: clamp(0.65rem, 1.4vw, 0.78rem);
+      color: var(--text-subtle);
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.35;
+    }
+    .hint:empty {
+      display: none;
+    }
+
+    #areaLayer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .app__panel {
+      grid-area: panel;
+      position: relative;
+      z-index: 1;
+      justify-self: stretch;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      background: var(--panel);
+      border-left: 1px solid var(--panel-border);
+      border-right: none;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    @media (max-width: 960px) {
+      .app__panel {
+        border-left: none;
+        border-top: 1px solid var(--panel-border);
+        min-height: 240px;
+      }
+      .panel__head,
+      .panel__body {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+      }
+      .panel__head {
+        min-height: 0;
+        display: block;
+        padding-top: 1.1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--panel-border);
+      }
+    }
+
+    @media (min-width: 961px) {
+      .panel__head {
+        box-sizing: border-box;
+        min-height: calc(
+          var(--app-chart-pad-t) + var(--app-title-line-h) + var(--app-header-gap-b)
+        );
+        padding: var(--app-chart-pad-t) max(0px, env(safe-area-inset-right, 0px)) var(
+            --app-header-gap-b
+          )
+          1.25rem;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        border-bottom: 1px solid var(--panel-border);
+      }
+    }
+
+    .panel__head h2 {
+      margin: 0;
+      font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      text-transform: none;
+      color: var(--text);
+    }
+
+    .panel__body {
+      padding: 1rem max(0px, env(safe-area-inset-right, 0px)) 1.5rem 1.25rem;
+      overflow: auto;
+      flex: 1;
+    }
+
+    .panel__empty {
+      color: var(--text-subtle);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .overview { animation: ovh 0.25s ease none; }
+    @keyframes ovh { from { opacity: 0; } to { opacity: 1; } }
+
+    .overview__meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0 0 0.5rem;
+    }
+
+    .overview__meta strong { color: var(--text-strong); }
+
+    .overview__title {
+      margin: 0 0 1rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .overview__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .overview__list li {
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--list-border);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .overview__list li:last-child { border-bottom: 0; }
+
+    .overview__list .o-name {
+      display: block;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+
+    .overview__list .o-role { color: var(--text-muted); font-size: 0.85rem; }
+
+    @media (max-width: 380px) {
+      .ball--director { width: 70px; height: 70px; font-size: 0.55rem; }
+    }
+
+    .org-sizing-probe {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 0;
+      height: 0;
+      overflow: visible;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .org-sizing-probe .ball { position: absolute; }
+
+    .ball--director-probe {
+      width: clamp(78px, 20vw, 110px);
+      height: clamp(78px, 20vw, 110px);
+      font-size: clamp(0.58rem, 1.5vw, 0.72rem);

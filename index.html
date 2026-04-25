@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("df-org-theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Evita folha de estilo antiga (OneDrive/Edge): combina com ?v= no link. -->
+  <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Organograma Dream Factory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css?v=10" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <div class="org-sizing-probe" id="sizingProbes" aria-hidden="true">
+    <div class="ball ball--president" id="probePres">M</div>
+    <div class="ball ball--director-probe" id="probeDir">D</div>
+    <div class="ball ball--area" id="probeArea">A</div>
+  </div>
+  <button type="button" class="theme-toggle" id="themeToggle">
+    <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75zM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zm11.644-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.59-1.59zM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75zm-2.416 6.668a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.06 1.06l1.59 1.591zM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18zm-4.242 0a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.59-1.59zM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12zM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591z"
+      />
+    </svg>
+    <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9" />
+    </svg>
+  </button>
+
+  <div class="app">
+    <main class="app__chart">
+      <header class="title">
+        <a
+          class="title__logo-link"
+          href="https://dreamfactory.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Dream Factory — site externo"
+        >
+          <img class="title__logo" src="img/logo.png" alt="" width="140" height="48" />
+        </a>
+        <h1>Organograma Dream Factory</h1>
+      </header>
+      <div class="app__inner">
+        <div class="hub" id="hub">
+          <div id="areaLayer" class="ball__layer" aria-hidden="true"></div>
+          <button
+            type="button"
+            class="ball ball--president"
+            id="president"
+            aria-expanded="false"
+            aria-label="Expander ou recolher diretores. Estado: recolhido."
+          >
+            <span class="ball__role">Presidente</span>
+            <span class="ball__name">Duda Magalhães</span>
+          </button>
+          <div class="ball ball--director" data-index="0" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Jomar Jr">Jomar Jr</div>
+          <div class="ball ball--director" data-index="1" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Claudio Romano">Claudio Romano</div>
+          <div class="ball ball--director" data-index="2" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fabricio Ribeiro">Fabricio Ribeiro</div>
+          <div class="ball ball--director" data-index="3" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Bruno Guerra">Bruno Guerra</div>
+          <div class="ball ball--director" data-index="4" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fernanda Cozac">Fernanda Cozac</div>
+          <div class="ball ball--director" data-index="5" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristine Oliveira">Cristine Oliveira</div>
+          <div class="ball ball--director" data-index="6" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristiano Coimbra">Cristiano Coimbra</div>
+        </div>
+        <p class="hint" id="hint"></p>
+      </div>
+    </main>
+
+    <aside class="app__panel" id="rightPanel" aria-label="Resumo da área selecionada">
+      <div class="panel__head">
+        <h2>Visão da equipe</h2>
+      </div>
+      <div class="panel__body" id="panelBody">
+        <p class="panel__empty" id="panelEmpty" aria-hidden="true"></p>
+        <div id="panelContent" class="panel__content" style="display: none" hidden></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="app-footer" role="contentinfo">
+    <p>© 2026 Laboratorio de Tecnologia Dream Factory</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
