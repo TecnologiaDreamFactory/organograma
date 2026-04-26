@@ -372,20 +372,20 @@
     }
 
     @media (max-width: 960px) {
-      /* Três colunas: logo | título (encosta à direita da faixa) | tema — mesma altura, sem mudar a largura do .app__chart */
+      /* Uma linha: logo | frase (ao centro do espaço entre os dois) | tema — alinhamento vertical com align-items: center */
       .app__chart > .title {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto;
         align-items: center;
-        justify-content: stretch;
         min-height: 0;
-        margin-bottom: 0.06rem;
-        padding-top: 0;
-        padding-bottom: 0;
-        gap: 0.28rem 0.35rem;
-        padding-right: 0;
+        margin-bottom: 0.08rem;
+        padding: 0 0.2rem 0 0;
+        column-gap: 0.3rem;
       }
       .app__chart > .title .title__logo-link {
+        grid-row: 1;
+        grid-column: 1;
         margin: 0;
         align-self: center;
       }
@@ -394,13 +394,20 @@
         max-width: 28vw;
       }
       .app__chart > .title h1 {
-        font-size: clamp(0.78rem, 3vw, 0.95rem);
-        line-height: 1.15;
+        grid-row: 1;
+        grid-column: 2;
+        margin: 0;
         min-width: 0;
-        text-align: right;
+        font-size: clamp(0.78rem, 3vw, 0.95rem);
+        line-height: 1.2;
+        text-align: center;
         align-self: center;
+        padding: 0 0.15rem;
+        box-sizing: border-box;
       }
       .app__chart > .title .theme-toggle {
+        grid-row: 1;
+        grid-column: 3;
         position: static;
         width: 1.75rem;
         height: 1.75rem;
@@ -419,8 +426,7 @@
 
     @media (max-width: 480px) {
       .app__chart > .title {
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: 0.25rem 0.3rem;
+        column-gap: 0.25rem;
       }
       .app__chart > .title .title__logo {
         height: clamp(1.3rem, 5.2vw, 1.7rem);
@@ -428,7 +434,8 @@
       }
       .app__chart > .title h1 {
         font-size: clamp(0.7rem, 3.2vw, 0.88rem);
-        line-height: 1.15;
+        line-height: 1.2;
+        padding: 0 0.1rem;
       }
       .app__chart > .title .theme-toggle {
         width: 1.65rem;
