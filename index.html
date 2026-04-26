@@ -13,6 +13,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark light" />
   <title>Organograma Dream Factory</title>
+  <!-- Logo leve (antes: logo.png ~252KB / 7195px — decodificação pesada no mobile). -->
+  <link rel="preload" as="image" type="image/webp" href="img/logo-header.webp" fetchpriority="high" />
   <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,7 +31,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
   /></noscript>
-  <link rel="stylesheet" href="styles.css?v=27" />
+  <link rel="stylesheet" href="styles.css?v=31" />
 </head>
 <body>
   <div class="org-sizing-probe" id="sizingProbes" aria-hidden="true">
@@ -37,18 +39,6 @@
     <div class="ball ball--director-probe" id="probeDir">D</div>
     <div class="ball ball--area" id="probeArea">A</div>
   </div>
-  <button type="button" class="theme-toggle" id="themeToggle">
-    <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75zM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zm11.644-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.59-1.59zM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75zm-2.416 6.668a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.06 1.06l1.59 1.591zM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18zm-4.242 0a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.59-1.59zM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12zM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591z"
-      />
-    </svg>
-    <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9" />
-    </svg>
-  </button>
-
   <div class="app">
     <main class="app__chart">
       <header class="title">
@@ -59,9 +49,32 @@
           rel="noopener noreferrer"
           aria-label="Dream Factory — site externo"
         >
-          <img class="title__logo" src="img/logo.png" alt="" width="140" height="48" />
+          <picture>
+            <source type="image/webp" srcset="img/logo-header.webp" />
+            <img
+              class="title__logo"
+              src="img/logo-header.png"
+              alt=""
+              width="480"
+              height="171"
+              sizes="(max-width: 960px) 28vw, 160px"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </picture>
         </a>
         <h1>Organograma Dream Factory</h1>
+        <button type="button" class="theme-toggle" id="themeToggle" aria-label="Alternar tema claro ou escuro">
+          <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2.25a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-1.5 0V3a.75.75 0 0 1 .75-.75zM7.5 12a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0zm11.644-5.834a.75.75 0 0 0-1.06-1.06l-1.591 1.59a.75.75 0 1 0 1.06 1.061l1.59-1.59zM21.75 12a.75.75 0 0 1-.75.75h-2.25a.75.75 0 0 1 0-1.5H21a.75.75 0 0 1 .75.75zm-2.416 6.668a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 1 0-1.06 1.06l1.59 1.591zM12 18a.75.75 0 0 1 .75.75V21a.75.75 0 0 1-1.5 0v-2.25A.75.75 0 0 1 12 18zm-4.242 0a.75.75 0 0 0-1.061-1.06l-1.591 1.59a.75.75 0 0 0 1.06 1.061l1.59-1.59zM6 12a.75.75 0 0 1-.75.75H3a.75.75 0 0 1 0-1.5h2.25A.75.75 0 0 1 6 12zM6.697 7.757a.75.75 0 0 0 1.06-1.06l-1.59-1.591a.75.75 0 0 0-1.061 1.06l1.59 1.591z"
+            />
+          </svg>
+          <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9" />
+          </svg>
+        </button>
       </header>
       <div class="app__inner">
         <div class="hub" id="hub">

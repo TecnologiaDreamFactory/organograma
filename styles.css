@@ -84,9 +84,10 @@
 
     @media (max-width: 960px) {
       :root {
-        --app-chart-pad-t: clamp(0.45rem, 1.4vh, 0.85rem);
-        --app-title-line-h: clamp(1.5rem, 4.5vw, 2rem);
-        --app-header-gap-b: clamp(0.25rem, 0.8vh, 0.55rem);
+        /* Respiro fixo ~15px abaixo do topo + safe-area (notch); não mexe na estrutura do header */
+        --app-chart-pad-t: calc(15px + env(safe-area-inset-top, 0px));
+        --app-title-line-h: clamp(1.15rem, 3.5vw, 1.55rem);
+        --app-header-gap-b: 0.06rem;
       }
       body.body--m-team {
         height: 100dvh;
@@ -267,6 +268,18 @@
       /* flex-start: título fixo no topo; overflow-anchor: evita “salto” ao crescer o hub */
     }
 
+    @media (max-width: 960px) {
+      .app__chart {
+        padding: var(--app-chart-pad-t) 0.2rem max(0.1rem, env(safe-area-inset-bottom, 0px)) max(0.28rem, env(safe-area-inset-left, 0px));
+      }
+      .hint {
+        margin-top: 0.12rem;
+        margin-bottom: 0;
+        line-height: 1.3;
+        font-size: clamp(0.58rem, 1.8vw, 0.7rem);
+      }
+    }
+
     .app__inner {
       width: 100%;
       max-width: min(100%, min(92vw, 640px));
@@ -359,10 +372,22 @@
     }
 
     @media (max-width: 960px) {
+      /* Três colunas: logo | título (encosta à direita da faixa) | tema — mesma altura, sem mudar a largura do .app__chart */
       .app__chart > .title {
-        gap: 0.55rem;
-        /* Reserva espaço pro botão de tema (fixed) ficar fora do alcance do H1. */
-        padding-right: calc(2.5rem + 1rem + 0.5rem);
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        justify-content: stretch;
+        min-height: 0;
+        margin-bottom: 0.06rem;
+        padding-top: 0;
+        padding-bottom: 0;
+        gap: 0.28rem 0.35rem;
+        padding-right: 0;
+      }
+      .app__chart > .title .title__logo-link {
+        margin: 0;
+        align-self: center;
       }
       .app__chart > .title .title__logo {
         height: clamp(1.4rem, 5.6vw, 1.9rem);
@@ -371,34 +396,47 @@
       .app__chart > .title h1 {
         font-size: clamp(0.78rem, 3vw, 0.95rem);
         line-height: 1.15;
+        min-width: 0;
+        text-align: right;
+        align-self: center;
+      }
+      .app__chart > .title .theme-toggle {
+        position: static;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.12rem;
+        flex-shrink: 0;
+        align-self: center;
+        margin: 0;
+        top: auto;
+        right: auto;
+      }
+      .app__chart > .title .theme-toggle__icon {
+        width: 0.92rem;
+        height: 0.92rem;
       }
     }
 
     @media (max-width: 480px) {
       .app__chart > .title {
-        flex-wrap: nowrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.5rem;
-        /* Reserva espaço pro botão de tema (fixed, top: 1rem, right: 1rem, w: 2.5rem) com folga. */
-        padding-right: calc(2.5rem + 1rem + 0.5rem);
-      }
-      .app__chart > .title .title__logo-link {
-        order: 0;
-        margin-right: auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 0.25rem 0.3rem;
       }
       .app__chart > .title .title__logo {
         height: clamp(1.3rem, 5.2vw, 1.7rem);
         max-width: 26vw;
       }
       .app__chart > .title h1 {
-        flex: 0 1 auto;
-        order: 1;
-        text-align: right;
         font-size: clamp(0.7rem, 3.2vw, 0.88rem);
         line-height: 1.15;
-        min-width: 0;
-        margin-left: auto;
+      }
+      .app__chart > .title .theme-toggle {
+        width: 1.65rem;
+        height: 1.65rem;
+      }
+      .app__chart > .title .theme-toggle__icon {
+        width: 0.86rem;
+        height: 0.86rem;
       }
     }
 
@@ -462,7 +500,7 @@
         min-height: 0;
         max-height: 100%;
         height: auto;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0;
         overflow: hidden;
       }
       .hub__stage {
@@ -473,21 +511,22 @@
         transform-origin: 50% 50%;
         transition: transform 0.55s var(--acc-spring);
       }
+      /* Escala um pouco menor = mais folga contra corte no header / faixa de áreas */
       .hub.has-areas .hub__stage {
-        transform: scale(0.82);
+        transform: scale(0.79);
       }
       .app--team-open .hub.has-areas .hub__stage {
-        transform: scale(0.74);
+        transform: scale(0.71);
       }
       .hub.has-areas .hub__area-strip {
         display: flex;
         flex-wrap: wrap;
         flex-direction: row;
         justify-content: center;
-        align-content: center;
+        align-content: flex-start;
         align-items: center;
-        gap: 0.4rem 0.5rem;
-        padding: 0.5rem 0.35rem 0.65rem;
+        gap: 0.22rem 0.32rem;
+        padding: 0.22rem 0.2rem 0.28rem;
         flex: 0 0 auto;
         z-index: 4;
         border-top: 1px solid var(--panel-border);
@@ -495,7 +534,7 @@
         bottom: 0;
         background: var(--bg-0);
         background: color-mix(in srgb, var(--bg-0) 88%, var(--bg-1) 12%);
-        box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.16);
       }
       html[data-theme="light"] .hub.has-areas .hub__area-strip {
         background: var(--bg-0);
@@ -517,15 +556,31 @@
       min-height: 2.4rem;
       height: auto;
       transform: none;
-      border-radius: 9999px;
+      /* Mesmo “chip” retangular do palco (.ball--director / .ball--area), não cápsula */
+      border-radius: 0.5rem;
       -webkit-tap-highlight-color: transparent;
     }
 
     @media (max-width: 960px) {
+      /* Mobile: mesma proporção compacta; visual alinhado aos nós (anel, sombra, peso) */
+      .ball--area.hub__area-pill,
       .hub__area-strip .ball--area {
-        font-size: clamp(0.5rem, 2.4vw, 0.7rem);
-        padding: 0.35rem 0.4rem;
-        border-radius: 9999px;
+        min-width: 3.75rem;
+        max-width: 36%;
+        min-height: 1.8rem;
+        line-height: 1.15;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        word-break: break-word;
+        hyphens: auto;
+        /* Reforça o mesmo stack dos outros nós (tamanho já reduzido acima) */
+        box-shadow: var(--node-focus-ring), 0 0 0 1px var(--node-ring), var(--area-shadow);
+      }
+      .hub__area-strip .ball--area {
+        font-size: clamp(0.42rem, 1.8vw, 0.525rem);
+        padding: 0.2625rem 0.3rem;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
       }
     }
 
