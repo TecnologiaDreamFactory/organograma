@@ -59,6 +59,11 @@
     html[data-theme="light"] { color-scheme: light; }
 
     @media (max-width: 960px) {
+      :root {
+        --app-chart-pad-t: clamp(0.45rem, 1.4vh, 0.85rem);
+        --app-title-line-h: clamp(1.5rem, 4.5vw, 2rem);
+        --app-header-gap-b: clamp(0.25rem, 0.8vh, 0.55rem);
+      }
       body.body--m-team {
         height: 100dvh;
         max-height: 100dvh;
@@ -320,19 +325,47 @@
       text-align: right;
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 960px) {
       .app__chart > .title {
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        align-items: flex-start;
+        gap: 0.55rem;
+        /* Reserva espaço pro botão de tema (fixed) ficar fora do alcance do H1. */
+        padding-right: calc(2.5rem + 1rem + 0.5rem);
+      }
+      .app__chart > .title .title__logo {
+        height: clamp(1.4rem, 5.6vw, 1.9rem);
+        max-width: 28vw;
       }
       .app__chart > .title h1 {
-        flex: 1 0 100%;
-        text-align: left;
-        order: 2;
+        font-size: clamp(0.78rem, 3vw, 0.95rem);
+        line-height: 1.15;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .app__chart > .title {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        /* Reserva espaço pro botão de tema (fixed, top: 1rem, right: 1rem, w: 2.5rem) com folga. */
+        padding-right: calc(2.5rem + 1rem + 0.5rem);
       }
       .app__chart > .title .title__logo-link {
+        order: 0;
+        margin-right: auto;
+      }
+      .app__chart > .title .title__logo {
+        height: clamp(1.3rem, 5.2vw, 1.7rem);
+        max-width: 26vw;
+      }
+      .app__chart > .title h1 {
+        flex: 0 1 auto;
         order: 1;
+        text-align: right;
+        font-size: clamp(0.7rem, 3.2vw, 0.88rem);
+        line-height: 1.15;
+        min-width: 0;
+        margin-left: auto;
       }
     }
 
@@ -404,6 +437,14 @@
         min-height: 0;
         height: auto;
         overflow: hidden;
+        transform-origin: 50% 50%;
+        transition: transform 0.55s var(--acc-spring);
+      }
+      .hub.has-areas .hub__stage {
+        transform: scale(0.82);
+      }
+      .app--team-open .hub.has-areas .hub__stage {
+        transform: scale(0.74);
       }
       .hub.has-areas .hub__area-strip {
         display: flex;

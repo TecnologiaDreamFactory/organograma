@@ -380,25 +380,8 @@
         var ns = "http://www.w3.org/2000/svg";
         orgConnectors.innerHTML = "";
         if (!expanded) return;
-        var w = hubStage.clientWidth;
-        var h = hubStage.clientHeight;
-        if (w < 1 || h < 1) return;
-        orgConnectors.setAttribute("viewBox", "0 0 " + w + " " + h);
-        orgConnectors.setAttribute("width", String(w));
-        orgConnectors.setAttribute("height", String(h));
-        var hbr = hubStage.getBoundingClientRect();
-        function rectOf(el) {
-          if (!el) return null;
-          var r = el.getBoundingClientRect();
-          return {
-            left: r.left - hbr.left,
-            right: r.right - hbr.left,
-            top: r.top - hbr.top,
-            bottom: r.bottom - hbr.top,
-            cy: r.top - hbr.top + r.height / 2,
-            cx: r.left - hbr.left + r.width / 2,
-          };
-        }
+        if (!ensureConnectorsViewBox()) return;
+        var L = columnLayout();
         var stroke = lineColorForConnectors();
         function appendCurve(x1, y1, x2, y2, kind) {
           var d = buildCurveD(x1, y1, x2, y2);
@@ -418,21 +401,21 @@
             }
           } catch (e) {}
         }
-        var pr = rectOf(president);
-        if (!pr) return;
-        var pOut = { x: pr.right, y: pr.cy };
+        var pOut = presOutputPoint(L);
         for (var i = 0; i < directors.length; i++) {
-          var dr = rectOf(directors[i]);
-          if (!dr) continue;
-          appendCurve(pOut.x, pOut.y, dr.left, dr.cy, "pres-dir");
+          var dIn = dirInputPoint(L, i);
+          appendCurve(pOut.x, pOut.y, dIn.x, dIn.y, "pres-dir");
         }
         if (!isMobileLayout() && areaBalls && areaBalls.length && selectedDir !== null) {
-          var drc = rectOf(directors[selectedDir]);
-          if (drc) {
-            for (var j = 0; j < areaBalls.length; j++) {
-              var ar = rectOf(areaBalls[j]);
-              if (!ar) continue;
-              appendCurve(drc.right, drc.cy, ar.left, ar.cy, "dir-area");
+          var dp = L.dirs[selectedDir];
+          if (dp) {
+            var dOut = { x: L.w / 2 + dp.x + L.D.dirW / 2, y: L.h / 2 + dp.y };
+            var slots = computeColumnAreaPoints(areaBalls.length, selectedDir);
+            for (var j = 0; j < areaBalls.length && j < slots.length; j++) {
+              var slot = slots[j];
+              if (!slot) continue;
+              var aIn = { x: L.w / 2 + slot.x - L.D.areaW / 2, y: L.h / 2 + slot.y };
+              appendCurve(dOut.x, dOut.y, aIn.x, aIn.y, "dir-area");
             }
           }
         }
