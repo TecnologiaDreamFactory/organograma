@@ -25,71 +25,76 @@
         return;
       }
 
+      var DEFAULT_AREA_CONTENT =
+        "Somnia et liber eris animo, pugna et liber eris in vita.";
+
+      var DEFAULT_EMPLOYEE_ROLE = "In officina somniorum laboro";
+
       var ORG_DATA = [
         { id: 0, name: "Jomar Jr", areas: [
-          { id: "a0-0", name: "área 1", content: "Define prioridades, OKRs e o plano tático que orienta a operação e as entregas da empresa.", people: [
-            { name: "Rita Mendes", role: "Plano tático e prioridades trimestrais" },
-            { name: "Paulo Mota", role: "Indicadores e OKRs" },
+          { id: "a0-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a0-1", name: "área 2", content: "Estrutura e renovação da rede de fornecedores, com foco em qualidade e prazo.", people: [
-            { name: "Lívia Costa", role: "Novos fornecedores nacionais" },
+          { id: "a0-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 1, name: "Claudio Romano", areas: [
-          { id: "a1-0", name: "área 1", content: "Fechamento, fluxo de caixa, contas a pagar e a receber, alinhados à saúde financeira do negócio.", people: [
-            { name: "Eduardo Vila", role: "Controladoria e fechamento" },
-            { name: "Júlia Azevedo", role: "Contas a pagar e a receber" },
+          { id: "a1-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a1-1", name: "área 2", content: "Cumprimento de obrigações acessórias, retenções e conformidade com a legislação tributária.", people: [
-            { name: "Marta Kehl", role: "Obrigações acessórias e retenções" },
+          { id: "a1-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 2, name: "Fabricio Ribeiro", areas: [
-          { id: "a2-0", name: "área 1", content: "Operação de piso, fornecedores, montagem e desmontagem com segurança e rigor de cronograma.", people: [
-            { name: "Fábio T.", role: "Operação de piso e fornecedores" },
-            { name: "Alê Prado", role: "Setup e desmontagem" },
+          { id: "a2-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a2-1", name: "área 2", content: "Roteirização, carga, descarga e suporte operacional à produção e ao cliente.", people: [
-            { name: "Dani Cordeiro", role: "Roteirização e carga" },
+          { id: "a2-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a2-2", name: "área 3", content: "EPI, normas de campo (NR) e briefings de segurança para equipes e parceiros.", people: [
-            { name: "Gustavo Y.", role: "EPI, NR e briefing de campo" },
+          { id: "a2-2", name: "área 3", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 3, name: "Bruno Guerra", areas: [
-          { id: "a3-0", name: "área 1", content: "Linha de arte, narrativa e conceito criativo 360° para eventos e campanhas da Dream.", people: [
-            { name: "Iuri Santos", role: "Criação 360 e linha de arte" },
-            { name: "Hanna Alves", role: "Cópia e narrativa" },
+          { id: "a3-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a3-1", name: "área 2", content: "Planejamento, veiculação e otimização de mídias de performance e patrocinadas.", people: [
-            { name: "Kiko Lima", role: "Mídias de performance" },
+          { id: "a3-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 4, name: "Fernanda Cozac", areas: [
-          { id: "a4-0", name: "área 1", content: "Pós-venda, experiência do cliente, pesquisas e melhoria contínua da jornada.", people: [
-            { name: "Bia Duarte", role: "Pós-venda e satisfação" },
-            { name: "Thi N.", role: "Pesquisa NPS" },
+          { id: "a4-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a4-1", name: "área 2", content: "Geração de oportunidades, contas estratégicas e evolução do pipeline comercial.", people: [
-            { name: "Léo C.", role: "Contas e pipeline comercial" },
+          { id: "a4-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 5, name: "Cristine Oliveira", areas: [
-          { id: "a5-0", name: "área 1", content: "Atração, seleção, folha, benefícios e suporte a líderes em gestão de pessoas.", people: [
-            { name: "Manu S.", role: "Recrutamento e seleção" },
-            { name: "Orlando F.", role: "Folha e benefícios" },
+          { id: "a5-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a5-1", name: "área 2", content: "Programas internos, trilha de aprendizagem e iniciativas que fortalecem o DNA da empresa.", people: [
-            { name: "Pri Campos", role: "Pirralhos e trilha interna" },
+          { id: "a5-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
         { id: 6, name: "Cristiano Coimbra", areas: [
-          { id: "a6-0", name: "área 1", content: "Contratos, análise de risco, compliance e apoio jurídico às áreas e aos projetos.", people: [
-            { name: "Dra. Helena Prado", role: "Contratos e compliance" },
+          { id: "a6-0", name: "área 1", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
-          { id: "a6-1", name: "área 2", content: "Cronograma, alocação de recursos, escopos e governança da entrega de projetos.", people: [
-            { name: "Mica R.", role: "Cronograma e alocação" },
-            { name: "Cadu", role: "Documentação de escopos" },
+          { id: "a6-1", name: "área 2", content: DEFAULT_AREA_CONTENT, people: [
+            { name: "Maria", role: DEFAULT_EMPLOYEE_ROLE },
+            { name: "João", role: DEFAULT_EMPLOYEE_ROLE },
           ]},
         ]},
       ];
