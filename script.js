@@ -27,67 +27,67 @@
 
       var ORG_DATA = [
         { id: 0, name: "Jomar Jr", areas: [
-          { id: "a0-0", name: "Estratégia", people: [
+          { id: "a0-0", name: "Estratégia", content: "Define prioridades, OKRs e o plano tático que orienta a operação e as entregas da empresa.", people: [
             { name: "Rita Mendes", role: "Plano tático e prioridades trimestrais" },
             { name: "Paulo Mota", role: "Indicadores e OKRs" },
           ]},
-          { id: "a0-1", name: "Parcerias", people: [
+          { id: "a0-1", name: "Parcerias", content: "Estrutura e renovação da rede de fornecedores, com foco em qualidade e prazo.", people: [
             { name: "Lívia Costa", role: "Novos fornecedores nacionais" },
           ]},
         ]},
         { id: 1, name: "Claudio Romano", areas: [
-          { id: "a1-0", name: "Financeiro", people: [
+          { id: "a1-0", name: "Financeiro", content: "Fechamento, fluxo de caixa, contas a pagar e a receber, alinhados à saúde financeira do negócio.", people: [
             { name: "Eduardo Vila", role: "Controladoria e fechamento" },
             { name: "Júlia Azevedo", role: "Contas a pagar e a receber" },
           ]},
-          { id: "a1-1", name: "Fiscal", people: [
+          { id: "a1-1", name: "Fiscal", content: "Cumprimento de obrigações acessórias, retenções e conformidade com a legislação tributária.", people: [
             { name: "Marta Kehl", role: "Obrigações acessórias e retenções" },
           ]},
         ]},
         { id: 2, name: "Fabricio Ribeiro", areas: [
-          { id: "a2-0", name: "Produção de evento", people: [
+          { id: "a2-0", name: "Produção de evento", content: "Operação de piso, fornecedores, montagem e desmontagem com segurança e rigor de cronograma.", people: [
             { name: "Fábio T.", role: "Operação de piso e fornecedores" },
             { name: "Alê Prado", role: "Setup e desmontagem" },
           ]},
-          { id: "a2-1", name: "Logística", people: [
+          { id: "a2-1", name: "Logística", content: "Roteirização, carga, descarga e suporte operacional à produção e ao cliente.", people: [
             { name: "Dani Cordeiro", role: "Roteirização e carga" },
           ]},
-          { id: "a2-2", name: "Segurança", people: [
+          { id: "a2-2", name: "Segurança", content: "EPI, normas de campo (NR) e briefings de segurança para equipes e parceiros.", people: [
             { name: "Gustavo Y.", role: "EPI, NR e briefing de campo" },
           ]},
         ]},
         { id: 3, name: "Bruno Guerra", areas: [
-          { id: "a3-0", name: "Criativo", people: [
+          { id: "a3-0", name: "Criativo", content: "Linha de arte, narrativa e conceito criativo 360° para eventos e campanhas da Dream.", people: [
             { name: "Iuri Santos", role: "Criação 360 e linha de arte" },
             { name: "Hanna Alves", role: "Cópia e narrativa" },
           ]},
-          { id: "a3-1", name: "Mídias", people: [
+          { id: "a3-1", name: "Mídias", content: "Planejamento, veiculação e otimização de mídias de performance e patrocinadas.", people: [
             { name: "Kiko Lima", role: "Mídias de performance" },
           ]},
         ]},
         { id: 4, name: "Fernanda Cozac", areas: [
-          { id: "a4-0", name: "Relacionamento", people: [
+          { id: "a4-0", name: "Relacionamento", content: "Pós-venda, experiência do cliente, pesquisas e melhoria contínua da jornada.", people: [
             { name: "Bia Duarte", role: "Pós-venda e satisfação" },
             { name: "Thi N.", role: "Pesquisa NPS" },
           ]},
-          { id: "a4-1", name: "Prospecção", people: [
+          { id: "a4-1", name: "Prospecção", content: "Geração de oportunidades, contas estratégicas e evolução do pipeline comercial.", people: [
             { name: "Léo C.", role: "Contas e pipeline comercial" },
           ]},
         ]},
         { id: 5, name: "Cristine Oliveira", areas: [
-          { id: "a5-0", name: "RH", people: [
+          { id: "a5-0", name: "RH", content: "Atração, seleção, folha, benefícios e suporte a líderes em gestão de pessoas.", people: [
             { name: "Manu S.", role: "Recrutamento e seleção" },
             { name: "Orlando F.", role: "Folha e benefícios" },
           ]},
-          { id: "a5-1", name: "Cultura", people: [
+          { id: "a5-1", name: "Cultura", content: "Programas internos, trilha de aprendizagem e iniciativas que fortalecem o DNA da empresa.", people: [
             { name: "Pri Campos", role: "Pirralhos e trilha interna" },
           ]},
         ]},
         { id: 6, name: "Cristiano Coimbra", areas: [
-          { id: "a6-0", name: "Jurídico", people: [
+          { id: "a6-0", name: "Jurídico", content: "Contratos, análise de risco, compliance e apoio jurídico às áreas e aos projetos.", people: [
             { name: "Dra. Helena Prado", role: "Contratos e compliance" },
           ]},
-          { id: "a6-1", name: "Projetos", people: [
+          { id: "a6-1", name: "Projetos", content: "Cronograma, alocação de recursos, escopos e governança da entrega de projetos.", people: [
             { name: "Mica R.", role: "Cronograma e alocação" },
             { name: "Cadu", role: "Documentação de escopos" },
           ]},
@@ -116,6 +116,9 @@
       var activeAreaId = null;
       var n = 7;
       var areaBalls = [];
+      /* Slots originais das áreas + tamanho do hub na altura do cálculo. Reescalados no resize para evitar “jitter”. */
+      var areaSlotsBase = null;
+      var hubSizeBase = null;
       /* Abertura = espelho do recolhimento: mesma duração, mesmo stagger, eases in/out pareados. */
       var AREA_TWEEN_DUR = 0.45;
       var AREA_STAGGER = 0.045;
@@ -210,9 +213,9 @@
       }
 
       /** Espaço mínimo (px) entre as bordas de duas bolas de área (não podem encostar). */
-      var G_AREA_TO_AREA = 22;
+      var G_AREA_TO_AREA = 18;
       /** Espaço mínimo (px) entre a borda de uma área e a do presidente / de qualquer diretor. */
-      var G_AREA_TO_DIRECTOR = 50;
+      var G_AREA_TO_DIRECTOR = 28;
       var PRES = { x: 0, y: 0 };
 
       function minCenterDistToDirector(D) {
@@ -395,40 +398,96 @@
         return null;
       }
 
+      function unbindTeamAccordion() {
+        if (panelContent && panelContent._accClick) {
+          panelContent.removeEventListener("click", panelContent._accClick);
+          panelContent._accClick = null;
+        }
+      }
+
+      function bindTeamAccordion() {
+        unbindTeamAccordion();
+        if (!panelContent) return;
+        var handler = function (e) {
+          var btn = e.target.closest(".team-acc__trigger");
+          if (!btn || !panelContent.contains(btn)) return;
+          e.preventDefault();
+          var item = btn.closest(".team-acc__item");
+          if (!item) return;
+          var open = item.classList.contains("is-open");
+          var all = panelContent.querySelectorAll(".team-acc__item");
+          for (var i = 0; i < all.length; i++) {
+            all[i].classList.remove("is-open");
+            var t = all[i].querySelector(".team-acc__trigger");
+            if (t) t.setAttribute("aria-expanded", "false");
+          }
+          if (!open) {
+            item.classList.add("is-open");
+            btn.setAttribute("aria-expanded", "true");
+          }
+        };
+        panelContent._accClick = handler;
+        panelContent.addEventListener("click", handler);
+      }
+
       function showPanel(fou) {
         if (!fou) return;
+        var areaContent = (fou.area && fou.area.content) ? fou.area.content : "";
+        var accBlocks = (fou.area.people || []).map(function (p, idx) {
+          var isOpen = idx === 0;
+          return (
+            "<div class=\"team-acc__item" + (isOpen ? " is-open" : "") + "\">" +
+              "<button type=\"button\" class=\"team-acc__trigger\" aria-expanded=\"" + (isOpen ? "true" : "false") + "\">" +
+                "<span class=\"team-acc__name\">" + escapeHtml(p.name) + "</span>" +
+                "<span class=\"team-acc__chev\" aria-hidden=\"true\"></span>" +
+              "</button>" +
+              "<div class=\"team-acc__panel\">" +
+                "<div class=\"team-acc__inner\"><p class=\"team-acc__role\">" + escapeHtml(p.role) + "</p></div>" +
+              "</div>" +
+            "</div>"
+          );
+        }).join("");
+
         var html = (
-          "<article class=\"overview\">" +
+          "<article class=\"overview overview--team\">" +
             "<p class=\"overview__meta\">Diretoria: <strong>" + escapeHtml(fou.director.name) + "</strong> · " +
             "Área: <strong>" + escapeHtml(fou.area.name) + "</strong></p>" +
             "<h3 class=\"overview__title\">" + escapeHtml(fou.area.name) + "</h3>" +
-            "<ul class=\"overview__list\">" +
-            fou.area.people.map(function (p) {
-              return (
-                "<li><span class=\"o-name\">" + escapeHtml(p.name) + "</span>" +
-                "<span class=\"o-role\">" + escapeHtml(p.role) + "</span></li>"
-              );
-            }).join("") +
-            "</ul></article>"
+            (areaContent
+              ? "<p class=\"overview__text\">" + escapeHtml(areaContent) + "</p>"
+              : "") +
+            "<p class=\"overview__eyebrow\">Equipe</p>" +
+            "<div class=\"team-acc\">" + accBlocks + "</div>" +
+          "</article>"
         );
         panelEmpty.style.display = "none";
         panelContent.style.display = "block";
         panelContent.removeAttribute("hidden");
         panelContent.innerHTML = html;
-        if (isMobileLayout() && appEl) {
-          appEl.classList.add("app--team-panel");
-          document.body.classList.add("body--m-team");
+        bindTeamAccordion();
+        if (appEl) appEl.classList.add("app--team-open");
+        if (isMobileLayout()) document.body.classList.add("body--m-team");
+        if (typeof gsap !== "undefined" && panelContent.querySelector) {
+          var root = panelContent.querySelector(".overview--team");
+          if (root) {
+            gsap.fromTo(
+              root.querySelectorAll(".overview__meta, .overview__title, .overview__text, .overview__eyebrow, .team-acc__item"),
+              { opacity: 0, y: 18 },
+              { opacity: 1, y: 0, duration: 0.55, stagger: 0.08, ease: "back.out(1.2)", overwrite: "auto" }
+            );
+          }
         }
       }
 
       function clearPanel() {
+        unbindTeamAccordion();
         activeAreaId = null;
         areaBalls.forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
         panelContent.innerHTML = "";
         panelContent.style.display = "none";
         panelContent.setAttribute("hidden", "");
         panelEmpty.style.display = "block";
-        if (appEl) appEl.classList.remove("app--team-panel");
+        if (appEl) appEl.classList.remove("app--team-open");
         document.body.classList.remove("body--m-team");
       }
 
@@ -461,6 +520,8 @@
         hub.classList.remove("has-areas");
         selectedDir = null;
         setDirectorSelected(-1);
+        areaSlotsBase = null;
+        hubSizeBase = null;
       }
 
       /** Anima as bolas de área de volta ao diretor (espelha a abertura, em ordem inversa). Retorna null se não houver o que recolher. */
@@ -555,6 +616,13 @@
         directorsPulseLeftToRight();
         var posD = positions()[directorIndex];
         var slots = mobile ? null : computeRandomAreaPoints(m, directorIndex);
+        if (!mobile && slots) {
+          areaSlotsBase = slots.map(function (p) { return { x: p.x, y: p.y }; });
+          hubSizeBase = { w: hub.clientWidth || 1, h: hub.clientHeight || 1 };
+        } else {
+          areaSlotsBase = null;
+          hubSizeBase = null;
+        }
         selectedDir = directorIndex;
         setDirectorSelected(directorIndex);
         data.areas.forEach(function (arObj, j) {
@@ -740,7 +808,7 @@
         if (!pos || !pos.length) pos = positions();
         var moveEase = "power2.out";
         var tl = gsap.timeline({ onComplete: function () { busy = false; } });
-        /* Pulso leve, sem rotação 360, para o organograma não “andar” com o título */
+        /* Pulso leve do presidente ao expandir o anel (tamanho normal do gráfico; “shrink” só ao escolher área no CSS) */
         tl.to(president, { scale: 1.04, rotation: 0, transformOrigin: "50% 50%", duration: 0.3, ease: "power2.out" }, 0);
         tl.to(president, { scale: 1, duration: 0.35, ease: "power2.inOut" }, 0.3);
         directors.forEach(function (el, i) {
@@ -765,7 +833,7 @@
           void hub.offsetWidth;
           var pos = positions();
           directors.forEach(function (el, i) {
-            gsap.to(el, { x: pos[i].x, y: pos[i].y, rotation: 0, duration: 0.4, ease: "power2.out" });
+            gsap.to(el, { x: pos[i].x, y: pos[i].y, rotation: 0, duration: 0.45, ease: "power2.out", overwrite: "auto" });
           });
         }
         var nowM = isMobileLayout();
@@ -780,14 +848,34 @@
               if (prevFou) showPanel(prevFou);
             }
           }
-        } else if (selectedDir !== null && areaBalls.length) {
+        } else if (selectedDir !== null && areaBalls.length && areaSlotsBase && hubSizeBase) {
           if (isMobileLayout()) return;
-          var data = ORG_DATA[selectedDir];
-          if (!data) return;
-          var slots2 = computeRandomAreaPoints(data.areas.length, selectedDir);
+          /* Em vez de sortear novas posições a cada resize (jitter), reescala as posições
+             originais pelo rácio do hub atual e relaxa para garantir que cabem sem
+             sobreposição. Resultado: a sanfona “puxa” o painel e as áreas acompanham
+             suavemente, sem corte e sem saltos. */
+          var st = hubStage || hub;
+          var w = (st && st.clientWidth) || hubSizeBase.w;
+          var h = (st && st.clientHeight) || hubSizeBase.h;
+          var s = Math.min(w / hubSizeBase.w, h / hubSizeBase.h);
+          var D2 = measureDiameters();
+          var allDirPos2 = positions();
+          var rA2 = D2.area / 2;
+          var edgePad2 = rA2 + 6;
+          var halfX2 = Math.max(80, w * 0.5 - edgePad2);
+          var halfY2 = Math.max(80, h * 0.5 - edgePad2);
+          var scaled = areaSlotsBase.map(function (p) { return { x: p.x * s, y: p.y * s }; });
+          var relaxed = relaxAreaLayout(scaled, D2, allDirPos2, halfX2, halfY2);
           areaBalls.forEach(function (el, j) {
-            if (!slots2[j]) return;
-            gsap.to(el, { x: slots2[j].x, y: slots2[j].y, rotation: 0, duration: 0.4, ease: "power2.out", overwrite: "auto" });
+            if (!relaxed[j]) return;
+            gsap.to(el, {
+              x: relaxed[j].x,
+              y: relaxed[j].y,
+              rotation: 0,
+              duration: 0.55,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
           });
         }
       }
@@ -795,8 +883,26 @@
       var resizeDebounce;
       window.addEventListener("resize", function () {
         clearTimeout(resizeDebounce);
-        resizeDebounce = setTimeout(handleResize, 100);
+        resizeDebounce = setTimeout(handleResize, 80);
       });
+
+      /**
+       * Observa mudanças de tamanho do #hub (ex.: quando .app--team-open altera a grelha) e
+       * pede ao JS para reposicionar diretores e áreas ao novo raio. Isto evita que as bolas
+       * fiquem cortadas: a sanfona puxa o painel, o hub encolhe e o organograma acompanha.
+       */
+      if (typeof ResizeObserver !== "undefined" && hub) {
+        var hubROScheduled = false;
+        var hubRO = new ResizeObserver(function () {
+          if (hubROScheduled) return;
+          hubROScheduled = true;
+          requestAnimationFrame(function () {
+            hubROScheduled = false;
+            if (expanded) handleResize();
+          });
+        });
+        hubRO.observe(hub);
+      }
 
       president.addEventListener("click", function () {
         if (busy) return;

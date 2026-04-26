@@ -25,6 +25,9 @@
       --app-title-line-h: clamp(1.75rem, 4.5vw, 2.5rem);
       --app-chart-pad-t: clamp(1.1rem, 2.6vh, 1.9rem);
       --app-header-gap-b: clamp(0.5rem, 1.2vh, 0.9rem);
+      /* Sanfona: painel / itens (transição nítida) */
+      --acc-spring: cubic-bezier(0.2, 0.9, 0.25, 1.15);
+      --acc-panel-ease: cubic-bezier(0.33, 1, 0.68, 1);
     }
 
     html[data-theme="light"] {
@@ -154,6 +157,14 @@
       align-items: stretch;
       align-content: stretch;
       isolation: isolate;
+      transition: grid-template-columns 0.7s var(--acc-panel-ease);
+    }
+
+    @media (min-width: 961px) {
+      /* Só com área ativa: coluna do painel alarga + #hub encolhe (sanfona). O organograma continua visível. */
+      .app--team-open {
+        grid-template-columns: minmax(0, 1fr) min(42vw, 440px);
+      }
     }
 
     .app-footer {
@@ -176,29 +187,29 @@
     @media (max-width: 960px) {
       .app {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: minmax(0, 1fr) 22dvh;
         grid-template-areas:
           "chart"
           "panel";
-      }
-      /* “Visão da equipe” ativa: ~40% do viewport para o painel, ~60% para o gráfico (animação “achatada”) */
-      .app.app--team-panel {
-        grid-template-rows: minmax(0, 1fr) 40dvh;
         min-height: 100dvh;
         max-height: 100dvh;
         height: 100dvh;
-        align-self: stretch;
         overflow: hidden;
+        transition: grid-template-rows 0.95s var(--acc-spring);
       }
-      .app.app--team-panel .app__chart {
+      /* "Visão da equipe" sobe para 40% da tela ao escolher uma área (sanfona) */
+      .app--team-open {
+        grid-template-rows: minmax(0, 1fr) 40dvh;
+      }
+      .app .app__chart {
         min-height: 0;
         overflow: hidden;
         -webkit-overflow-scrolling: auto;
       }
-      .app.app--team-panel .app__panel {
+      .app .app__panel {
         min-height: 0;
-        max-height: 40dvh;
-        flex: 0 0 40dvh;
+        max-height: 100%;
+        transition: background 0.4s ease;
       }
     }
 
@@ -342,6 +353,22 @@
       overflow: hidden;
       box-sizing: border-box;
       flex-shrink: 0;
+      transition: height 0.75s var(--acc-spring), min-height 0.75s var(--acc-spring), max-height 0.75s var(--acc-spring);
+    }
+
+    /* Encolhimento real do hub (não transform): JS observa e reposiciona as bolas no novo raio */
+    @media (min-width: 961px) {
+      .app--team-open .hub {
+        height: min(58dvh, 580px);
+        min-height: min(54dvh, 480px);
+        max-height: min(62dvh, 600px);
+      }
+    }
+    @media (max-width: 960px) {
+      .app--team-open .hub {
+        min-height: 0;
+        max-height: 100%;
+      }
     }
 
     .hub__stage {
@@ -364,28 +391,22 @@
         flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
-      }
-      .app--team-panel .app__inner {
         max-height: 100%;
         overflow: hidden;
-        flex: 1 1 auto;
-        min-height: 0;
       }
       .hub {
         display: flex;
         flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
-        max-height: none;
-        /* Ocupa a coluna; faixa de áreas fixa no fundo (não acompanha scroll da coluna) */
+        max-height: 100%;
         height: auto;
-        min-height: min(64dvh, 560px);
         margin-bottom: 0.25rem;
         overflow: hidden;
       }
       .hub__stage {
         flex: 1 1 auto;
-        min-height: 200px;
+        min-height: 0;
         height: auto;
         overflow: hidden;
       }
@@ -406,16 +427,11 @@
         background: var(--bg-0);
         background: color-mix(in srgb, var(--bg-0) 88%, var(--bg-1) 12%);
         box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
-        /* Fica ancorada à base do viewport da coluna (scroll) em vez de sair com o eixo do hub. */
       }
       html[data-theme="light"] .hub.has-areas .hub__area-strip {
         background: var(--bg-0);
         background: color-mix(in srgb, var(--bg-0) 92%, #fff 8%);
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
-      }
-      .app--team-panel .hub {
-        min-height: 0;
-        flex: 1 1 auto;
       }
     }
 
@@ -462,27 +478,35 @@
       will-change: transform, opacity;
     }
 
+    /* Tamanho UNIFICADO para todas as bolas (presidente, diretores, áreas). */
+    .ball--president,
+    .ball--director,
+    .ball--area {
+      width: clamp(74px, 18vw, 100px);
+      height: clamp(74px, 18vw, 100px);
+    }
+
     .ball--president {
       z-index: 25;
-      width: clamp(100px, 28vw, 160px);
-      height: clamp(100px, 28vw, 160px);
       cursor: pointer;
       background: var(--node-president);
       box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
-      font-size: clamp(0.7rem, 1.9vw, 0.9rem);
+      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
       font-weight: 600;
-      line-height: 1.2;
-      padding: 0.4rem;
+      line-height: 1.15;
+      padding: 0.35rem 0.3rem;
       flex-direction: column;
-      gap: 0.12rem;
+      gap: 0.08rem;
+      word-break: break-word;
+      hyphens: auto;
     }
 
     .ball__role {
-      font-size: 0.5em;
-      font-weight: 500;
-      letter-spacing: 0.04em;
+      font-size: 0.55em;
+      font-weight: 600;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      opacity: 0.9;
+      opacity: 0.95;
     }
 
     .ball--president:hover {
@@ -491,9 +515,7 @@
 
     .ball--director {
       z-index: 12;
-      width: clamp(78px, 20vw, 110px);
-      height: clamp(78px, 20vw, 110px);
-      font-size: clamp(0.58rem, 1.5vw, 0.72rem);
+      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
       font-weight: 500;
       line-height: 1.1;
       padding: 0.3rem 0.25rem;
@@ -518,12 +540,12 @@
 
     .ball--area {
       z-index: 16;
-      width: clamp(64px, 16vw, 96px);
-      height: clamp(64px, 16vw, 96px);
-      font-size: clamp(0.5rem, 1.25vw, 0.65rem);
+      font-size: clamp(0.5rem, 1.2vw, 0.62rem);
       font-weight: 500;
       line-height: 1.1;
-      padding: 0.3rem;
+      word-break: break-word;
+      hyphens: auto;
+      padding: 0.28rem;
       background: var(--node-area);
       box-shadow: 0 0 0 1px var(--node-ring), var(--area-shadow);
       cursor: pointer;
@@ -569,6 +591,16 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      transition: box-shadow 0.7s var(--acc-panel-ease);
+    }
+
+    @media (min-width: 961px) {
+      .app--team-open .app__panel {
+        box-shadow: -20px 0 55px rgba(0, 0, 0, 0.35);
+      }
+      html[data-theme="light"] .app--team-open .app__panel {
+        box-shadow: -14px 0 40px rgba(0, 0, 0, 0.12);
+      }
     }
 
     @media (max-width: 960px) {
@@ -642,10 +674,187 @@
     .overview__meta strong { color: var(--text-strong); }
 
     .overview__title {
-      margin: 0 0 1rem;
-      font-size: 1.15rem;
+      margin: 0 0 0.5rem;
+      font-size: 1.12rem;
       font-weight: 600;
       color: var(--text);
+    }
+
+    .overview__text {
+      margin: 0 0 1rem;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    .overview__eyebrow {
+      margin: 0 0 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+    }
+
+    .team-acc {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .team-acc__item {
+      position: relative;
+      border: 1px solid var(--list-border);
+      border-radius: 0.75rem;
+      background: color-mix(in srgb, var(--panel) 85%, var(--bg-1) 15%);
+      overflow: hidden;
+      transition:
+        border-color 0.45s var(--acc-panel-ease),
+        box-shadow 0.5s var(--acc-panel-ease),
+        transform 0.55s var(--acc-spring),
+        background-color 0.45s var(--acc-panel-ease),
+        opacity 0.35s ease;
+      box-shadow: 0 2px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 16px rgba(0, 0, 0, 0.16);
+    }
+
+    html[data-theme="light"] .team-acc__item {
+      background: color-mix(in srgb, var(--panel) 94%, #f0e9e2 6%);
+    }
+
+    /* Marca lateral azul que “cresce” ao abrir o item — assinatura visual da sanfona */
+    .team-acc__item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12%;
+      bottom: 12%;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--node-blue);
+      transform: scaleY(0);
+      transform-origin: 50% 50%;
+      transition: transform 0.55s var(--acc-spring);
+      opacity: 0.95;
+    }
+
+    .team-acc__item.is-open::before {
+      transform: scaleY(1);
+    }
+
+    .team-acc__item.is-open {
+      border-color: color-mix(in srgb, var(--node-blue) 55%, var(--list-border) 45%);
+      background: color-mix(in srgb, var(--node-blue) 10%, var(--panel) 90%);
+      transform: scale(1.025);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--node-blue) 40%, transparent),
+        0 14px 42px rgba(0, 0, 0, 0.32),
+        0 0 36px color-mix(in srgb, var(--node-blue) 28%, transparent);
+    }
+
+    html[data-theme="light"] .team-acc__item.is-open {
+      background: color-mix(in srgb, var(--node-blue) 8%, var(--panel) 92%);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--node-blue) 45%, var(--list-border) 55%),
+        0 12px 36px rgba(0, 0, 0, 0.12);
+    }
+
+    .team-acc__item:not(.is-open) {
+      opacity: 0.85;
+    }
+
+    .team-acc__item.is-open { opacity: 1; }
+
+    .team-acc__trigger {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin: 0;
+      padding: 1rem 1rem 1rem 1.1rem;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 0.98rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-align: left;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.3s var(--acc-panel-ease);
+    }
+
+    .team-acc__item.is-open .team-acc__trigger {
+      color: var(--text-strong);
+    }
+
+    .team-acc__trigger:hover { color: var(--text-strong); }
+
+    .team-acc__trigger:focus-visible {
+      outline: 2px solid var(--node-blue);
+      outline-offset: -2px;
+    }
+
+    .team-acc__name { flex: 1; min-width: 0; }
+
+    /* Chevron grande dentro de “pílula” — fica nítido o estado aberto/fechado */
+    .team-acc__chev {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--node-blue) 12%, transparent);
+      color: var(--text-muted);
+      transition:
+        background 0.35s var(--acc-panel-ease),
+        color 0.3s ease,
+        transform 0.55s var(--acc-spring);
+    }
+
+    .team-acc__chev::before {
+      content: "";
+      width: 0.55rem;
+      height: 0.55rem;
+      border-right: 2.5px solid currentColor;
+      border-bottom: 2.5px solid currentColor;
+      transform: rotate(45deg) translate(-1px, -1px);
+      transition: transform 0.55s var(--acc-spring);
+    }
+
+    .team-acc__item.is-open .team-acc__chev {
+      background: var(--node-blue);
+      color: #fff;
+      transform: rotate(180deg);
+    }
+
+    .team-acc__panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.75s var(--acc-spring);
+    }
+
+    .team-acc__item.is-open .team-acc__panel { grid-template-rows: 1fr; }
+
+    .team-acc__inner { min-height: 0; overflow: hidden; }
+
+    .team-acc__role {
+      margin: 0;
+      padding: 0.9rem 1.1rem 1.15rem 1.1rem;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+      border-top: 1px solid color-mix(in srgb, var(--node-blue) 25%, var(--list-border) 75%);
+      background: color-mix(in srgb, var(--bg-0) 35%, var(--panel) 65%);
+    }
+
+    html[data-theme="light"] .team-acc__role {
+      color: var(--text-muted);
+      background: color-mix(in srgb, #f6efe7 55%, var(--panel) 45%);
     }
 
     .overview__list {
@@ -673,7 +882,9 @@
     .overview__list .o-role { color: var(--text-muted); font-size: 0.85rem; }
 
     @media (max-width: 380px) {
-      .ball--director { width: 70px; height: 70px; font-size: 0.55rem; }
+      .ball--president,
+      .ball--director,
+      .ball--area { width: 66px; height: 66px; font-size: 0.5rem; }
     }
 
     .org-sizing-probe {
@@ -689,6 +900,7 @@
     .org-sizing-probe .ball { position: absolute; }
 
     .ball--director-probe {
-      width: clamp(78px, 20vw, 110px);
-      height: clamp(78px, 20vw, 110px);
-      font-size: clamp(0.58rem, 1.5vw, 0.72rem);
+      width: clamp(74px, 18vw, 100px);
+      height: clamp(74px, 18vw, 100px);
+      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
+    }
