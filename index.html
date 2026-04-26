@@ -21,7 +21,7 @@
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=11" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
@@ -58,24 +58,27 @@
       </header>
       <div class="app__inner">
         <div class="hub" id="hub">
-          <div id="areaLayer" class="ball__layer" aria-hidden="true"></div>
-          <button
-            type="button"
-            class="ball ball--president"
-            id="president"
-            aria-expanded="false"
-            aria-label="Expander ou recolher diretores. Estado: recolhido."
-          >
-            <span class="ball__role">Presidente</span>
-            <span class="ball__name">Duda Magalhães</span>
-          </button>
-          <div class="ball ball--director" data-index="0" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Jomar Jr">Jomar Jr</div>
-          <div class="ball ball--director" data-index="1" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Claudio Romano">Claudio Romano</div>
-          <div class="ball ball--director" data-index="2" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fabricio Ribeiro">Fabricio Ribeiro</div>
-          <div class="ball ball--director" data-index="3" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Bruno Guerra">Bruno Guerra</div>
-          <div class="ball ball--director" data-index="4" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fernanda Cozac">Fernanda Cozac</div>
-          <div class="ball ball--director" data-index="5" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristine Oliveira">Cristine Oliveira</div>
-          <div class="ball ball--director" data-index="6" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristiano Coimbra">Cristiano Coimbra</div>
+          <div class="hub__stage" id="hubStage">
+            <div id="areaLayer" class="ball__layer" aria-hidden="true"></div>
+            <button
+              type="button"
+              class="ball ball--president"
+              id="president"
+              aria-expanded="false"
+              aria-label="Expander ou recolher diretores. Estado: recolhido."
+            >
+              <span class="ball__role">Presidente</span>
+              <span class="ball__name">Duda Magalhães</span>
+            </button>
+            <div class="ball ball--director" data-index="0" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Jomar Jr">Jomar Jr</div>
+            <div class="ball ball--director" data-index="1" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Claudio Romano">Claudio Romano</div>
+            <div class="ball ball--director" data-index="2" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fabricio Ribeiro">Fabricio Ribeiro</div>
+            <div class="ball ball--director" data-index="3" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Bruno Guerra">Bruno Guerra</div>
+            <div class="ball ball--director" data-index="4" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Fernanda Cozac">Fernanda Cozac</div>
+            <div class="ball ball--director" data-index="5" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristine Oliveira">Cristine Oliveira</div>
+            <div class="ball ball--director" data-index="6" role="button" tabindex="0" aria-pressed="false" aria-label="Diretor Cristiano Coimbra">Cristiano Coimbra</div>
+          </div>
+          <div class="hub__area-strip" id="areaStrip" aria-hidden="true" hidden></div>
         </div>
         <p class="hint" id="hint"></p>
       </div>

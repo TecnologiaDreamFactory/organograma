@@ -96,9 +96,16 @@
 
       var president = document.getElementById("president");
       var hub = document.getElementById("hub");
+      var hubStage = document.getElementById("hubStage");
+      var areaStrip = document.getElementById("areaStrip");
+      var appEl = document.querySelector(".app");
       var areaLayer = document.getElementById("areaLayer");
       /* Só diretores DENTRO do hub — o #probeDir fora do hub também é .ball--director e quebrava o índice 7 */
-      var directors = [].slice.call(hub.querySelectorAll(".ball--director"));
+      var directors = [].slice.call((hubStage || hub).querySelectorAll(".ball--director"));
+      function isMobileLayout() {
+        return typeof window.matchMedia === "function" && window.matchMedia("(max-width: 960px)").matches;
+      }
+      var lastMobileLayout = isMobileLayout();
       var hint = document.getElementById("hint");
       var panelEmpty = document.getElementById("panelEmpty");
       var panelContent = document.getElementById("panelContent");
@@ -182,8 +189,11 @@
         var D = measureDiameters();
         var pad = 14;
         var capBox = getChartMaxBox();
-        var w = Math.min(hub.clientWidth, capBox.w);
-        var h = Math.min(hub.clientHeight, capBox.h);
+        var stage = hubStage || hub;
+        var w = stage ? Math.min(stage.clientWidth, capBox.w) : 0;
+        var h = stage ? Math.min(stage.clientHeight, capBox.h) : 0;
+        if (!w) w = hub && hub.clientWidth ? hub.clientWidth : 400;
+        if (!h) h = hub && hub.clientHeight ? hub.clientHeight : 400;
         var capR = Math.min(w, h) / 2 - D.director / 2 - pad;
         return Math.min(need, Math.max(0, capR));
       }
@@ -305,8 +315,9 @@
         if (selDirIdx === undefined || selDirIdx === null) selDirIdx = 0;
         var D = measureDiameters();
         var allDirPos = positions();
-        var w = hub.clientWidth || 400;
-        var h = hub.clientHeight || 400;
+        var st = hubStage || hub;
+        var w = (st && st.clientWidth) || 400;
+        var h = (st && st.clientHeight) || 400;
         var rA = D.area / 2;
         var edgePad = rA + 6;
         var halfX = Math.max(80, w * 0.5 - edgePad);
@@ -404,6 +415,10 @@
         panelContent.style.display = "block";
         panelContent.removeAttribute("hidden");
         panelContent.innerHTML = html;
+        if (isMobileLayout() && appEl) {
+          appEl.classList.add("app--team-panel");
+          document.body.classList.add("body--m-team");
+        }
       }
 
       function clearPanel() {
@@ -413,6 +428,8 @@
         panelContent.style.display = "none";
         panelContent.setAttribute("hidden", "");
         panelEmpty.style.display = "block";
+        if (appEl) appEl.classList.remove("app--team-panel");
+        document.body.classList.remove("body--m-team");
       }
 
       function escapeHtml(s) {
@@ -433,8 +450,13 @@
       function destroyAreaBalls() {
         areaBalls.forEach(function (b) { b.remove(); });
         areaBalls = [];
-        var stray = hub.querySelectorAll(".ball--area");
+        var stray = (hub || document).querySelectorAll(".ball--area");
         stray.forEach(function (b) { b.remove(); });
+        if (areaStrip) {
+          while (areaStrip.firstChild) areaStrip.removeChild(areaStrip.firstChild);
+          areaStrip.setAttribute("hidden", "");
+          areaStrip.setAttribute("aria-hidden", "true");
+        }
         if (areaLayer) areaLayer.setAttribute("aria-hidden", "true");
         hub.classList.remove("has-areas");
         selectedDir = null;
@@ -444,6 +466,25 @@
       /** Anima as bolas de área de volta ao diretor (espelha a abertura, em ordem inversa). Retorna null se não houver o que recolher. */
       function buildAreaRetractTimeline() {
         if (!areaBalls.length || selectedDir === null) return null;
+        if (isMobileLayout()) {
+          var tlm = gsap.timeline();
+          var n0 = areaBalls.length;
+          areaBalls.forEach(function (el, j) {
+            tlm.to(
+              el,
+              {
+                y: 10,
+                scale: 0.85,
+                opacity: 0,
+                duration: AREA_TWEEN_DUR * 0.92,
+                ease: "power2.in",
+                overwrite: "auto",
+              },
+              (n0 - 1 - j) * AREA_STAGGER
+            );
+          });
+          return tlm;
+        }
         var posD = positions()[selectedDir];
         if (!posD) return null;
         var n = areaBalls.length;
@@ -497,59 +538,86 @@
         var data = ORG_DATA[directorIndex];
         if (!data) return;
         var m = data.areas.length;
+        var mobile = isMobileLayout();
+        var mount = (mobile && areaStrip) ? areaStrip : (hubStage || hub);
         destroyAreaBalls();
         hub.classList.add("has-areas");
+        if (areaStrip) {
+          if (mobile) {
+            areaStrip.removeAttribute("hidden");
+            areaStrip.setAttribute("aria-hidden", "false");
+          } else {
+            areaStrip.setAttribute("hidden", "");
+            areaStrip.setAttribute("aria-hidden", "true");
+          }
+        }
         void hub.offsetWidth;
         directorsPulseLeftToRight();
         var posD = positions()[directorIndex];
-        var slots = computeRandomAreaPoints(m, directorIndex);
+        var slots = mobile ? null : computeRandomAreaPoints(m, directorIndex);
         selectedDir = directorIndex;
         setDirectorSelected(directorIndex);
         data.areas.forEach(function (arObj, j) {
           var el = document.createElement("button");
           el.type = "button";
-          el.className = "ball ball--area";
+          el.className = "ball ball--area" + (mobile ? " hub__area-pill" : "");
           el.textContent = arObj.name;
           el.dataset.areaId = arObj.id;
           el.setAttribute("aria-pressed", activeAreaId === arObj.id ? "true" : "false");
           el.setAttribute("aria-label", "Área " + arObj.name);
-          hub.appendChild(el);
+          mount.appendChild(el);
           areaBalls.push(el);
         });
 
-        /* Sai do diretor já visível e cresce de forma alinhada ao percurso até o tamanho final no slot. */
-        var areaStartScale = 0.3;
-        gsap.set(areaBalls, {
-          x: posD.x,
-          y: posD.y,
-          xPercent: -50,
-          yPercent: -50,
-          left: "50%",
-          top: "50%",
-          transformOrigin: "50% 50%",
-          scale: areaStartScale,
-          opacity: 0.9,
-          rotation: 0,
-        });
-
-        areaBalls.forEach(function (el, j) {
-          var tx = slots[j].x;
-          var ty = slots[j].y;
-          gsap.to(el, {
-            x: tx,
-            y: ty,
+        if (mobile) {
+          gsap.set(areaBalls, { y: 12, opacity: 0, scale: 0.98 });
+          gsap.to(areaBalls, {
+            y: 0,
             scale: 1,
             opacity: 1,
-            duration: AREA_TWEEN_DUR,
-            delay: j * AREA_STAGGER,
+            duration: 0.38,
+            delay: 0,
+            stagger: AREA_STAGGER,
             ease: "power2.out",
-            rotation: 0,
-            overwrite: "auto",
             onStart: function () {
-              if (j === 0) areaLayer.setAttribute("aria-hidden", "false");
+              if (areaLayer) areaLayer.setAttribute("aria-hidden", "false");
             },
           });
-        });
+        } else {
+          /* Sai do diretor já visível e cresce de forma alinhada ao percurso até o tamanho final no slot. */
+          var areaStartScale = 0.3;
+          gsap.set(areaBalls, {
+            x: posD.x,
+            y: posD.y,
+            xPercent: -50,
+            yPercent: -50,
+            left: "50%",
+            top: "50%",
+            transformOrigin: "50% 50%",
+            scale: areaStartScale,
+            opacity: 0.9,
+            rotation: 0,
+          });
+          areaBalls.forEach(function (el, j) {
+            if (!slots || !slots[j]) return;
+            var tx = slots[j].x;
+            var ty = slots[j].y;
+            gsap.to(el, {
+              x: tx,
+              y: ty,
+              scale: 1,
+              opacity: 1,
+              duration: AREA_TWEEN_DUR,
+              delay: j * AREA_STAGGER,
+              ease: "power2.out",
+              rotation: 0,
+              overwrite: "auto",
+              onStart: function () {
+                if (j === 0) areaLayer.setAttribute("aria-hidden", "false");
+              },
+            });
+          });
+        }
 
         areaBalls.forEach(function (el) {
           el.addEventListener("click", onAreaClick);
@@ -700,7 +768,20 @@
             gsap.to(el, { x: pos[i].x, y: pos[i].y, rotation: 0, duration: 0.4, ease: "power2.out" });
           });
         }
-        if (selectedDir !== null && areaBalls.length) {
+        var nowM = isMobileLayout();
+        if (nowM !== lastMobileLayout) {
+          lastMobileLayout = nowM;
+          if (selectedDir !== null && expanded) {
+            var dData = ORG_DATA[selectedDir];
+            if (dData && dData.areas && dData.areas.length) {
+              var prevA = activeAreaId;
+              var prevFou = prevA ? findAreaMeta(prevA) : null;
+              placeAreaBalls(selectedDir);
+              if (prevFou) showPanel(prevFou);
+            }
+          }
+        } else if (selectedDir !== null && areaBalls.length) {
+          if (isMobileLayout()) return;
           var data = ORG_DATA[selectedDir];
           if (!data) return;
           var slots2 = computeRandomAreaPoints(data.areas.length, selectedDir);

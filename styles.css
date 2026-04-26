@@ -55,6 +55,17 @@
     html { color-scheme: dark; -webkit-font-smoothing: antialiased; }
     html[data-theme="light"] { color-scheme: light; }
 
+    @media (max-width: 960px) {
+      body.body--m-team {
+        height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
+      }
+      body.body--m-team .app-footer {
+        display: none;
+      }
+    }
+
     *, *::before, *::after { box-sizing: border-box; }
 
     html, body {
@@ -169,6 +180,25 @@
         grid-template-areas:
           "chart"
           "panel";
+      }
+      /* “Visão da equipe” ativa: ~40% do viewport para o painel, ~60% para o gráfico (animação “achatada”) */
+      .app.app--team-panel {
+        grid-template-rows: minmax(0, 1fr) 40dvh;
+        min-height: 100dvh;
+        max-height: 100dvh;
+        height: 100dvh;
+        align-self: stretch;
+        overflow: hidden;
+      }
+      .app.app--team-panel .app__chart {
+        min-height: 0;
+        overflow: hidden;
+        -webkit-overflow-scrolling: auto;
+      }
+      .app.app--team-panel .app__panel {
+        min-height: 0;
+        max-height: 40dvh;
+        flex: 0 0 40dvh;
       }
     }
 
@@ -312,6 +342,105 @@
       overflow: hidden;
       box-sizing: border-box;
       flex-shrink: 0;
+    }
+
+    .hub__stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      z-index: 0;
+    }
+
+    .hub__area-strip {
+      display: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 960px) {
+      .app__inner {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      .app--team-panel .app__inner {
+        max-height: 100%;
+        overflow: hidden;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+      .hub {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        /* Ocupa a coluna; faixa de áreas fixa no fundo (não acompanha scroll da coluna) */
+        height: auto;
+        min-height: min(64dvh, 560px);
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+      }
+      .hub__stage {
+        flex: 1 1 auto;
+        min-height: 200px;
+        height: auto;
+        overflow: hidden;
+      }
+      .hub.has-areas .hub__area-strip {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        gap: 0.4rem 0.5rem;
+        padding: 0.5rem 0.35rem 0.65rem;
+        flex: 0 0 auto;
+        z-index: 4;
+        border-top: 1px solid var(--panel-border);
+        position: sticky;
+        bottom: 0;
+        background: var(--bg-0);
+        background: color-mix(in srgb, var(--bg-0) 88%, var(--bg-1) 12%);
+        box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
+        /* Fica ancorada à base do viewport da coluna (scroll) em vez de sair com o eixo do hub. */
+      }
+      html[data-theme="light"] .hub.has-areas .hub__area-strip {
+        background: var(--bg-0);
+        background: color-mix(in srgb, var(--bg-0) 92%, #fff 8%);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+      }
+      .app--team-panel .hub {
+        min-height: 0;
+        flex: 1 1 auto;
+      }
+    }
+
+    .ball--area.hub__area-pill,
+    .hub__area-strip .ball--area {
+      position: relative;
+      left: auto;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      width: auto;
+      min-width: 4.25rem;
+      max-width: 48%;
+      min-height: 2.5rem;
+      height: auto;
+      transform: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width: 960px) {
+      .hub__area-strip .ball--area {
+        font-size: clamp(0.5rem, 2.4vw, 0.7rem);
+        padding: 0.35rem 0.4rem;
+        border-radius: 9999px;
+      }
     }
 
     .ball {
