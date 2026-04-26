@@ -100,6 +100,7 @@
       var areaStrip = document.getElementById("areaStrip");
       var appEl = document.querySelector(".app");
       var areaLayer = document.getElementById("areaLayer");
+      var orgConnectors = document.getElementById("orgConnectors");
       /* Só diretores DENTRO do hub — o #probeDir fora do hub também é .ball--director e quebrava o índice 7 */
       var directors = [].slice.call((hubStage || hub).querySelectorAll(".ball--director"));
       function isMobileLayout() {
@@ -111,18 +112,18 @@
       var panelContent = document.getElementById("panelContent");
       var expanded = false;
       var busy = false;
+      var isExpanding = false;
+      var isCollapsing = false;
+      var isAreaAnimating = false;
+      var areaAnimToken = 0;
       var directorHoverSuppressed = false;
       var selectedDir = null;
       var activeAreaId = null;
       var n = 7;
       var areaBalls = [];
-      /* Slots originais das áreas + tamanho do hub na altura do cálculo. Reescalados no resize para evitar “jitter”. */
-      var areaSlotsBase = null;
-      var hubSizeBase = null;
       /* Abertura = espelho do recolhimento: mesma duração, mesmo stagger, eases in/out pareados. */
       var AREA_TWEEN_DUR = 0.45;
       var AREA_STAGGER = 0.045;
-      var G = 10;
       var probePres = document.getElementById("probePres");
       var probeDir = document.getElementById("probeDir");
       var probeArea = document.getElementById("probeArea");
@@ -141,11 +142,6 @@
         return true;
       }
 
-      function dist(a, b) {
-        var dx = a.x - b.x; var dy = a.y - b.y;
-        return Math.sqrt(dx * dx + dy * dy);
-      }
-
       function measureDiameters() {
         var pW = (president && president.offsetWidth) || 0;
         var pH = (president && president.offsetHeight) || 0;
@@ -160,232 +156,357 @@
         var aW = probeArea ? probeArea.offsetWidth : 0;
         var aH = probeArea ? probeArea.offsetHeight : 0;
         var w = hub.clientWidth || 400;
-        if (!aW) aW = Math.min(96, Math.max(64, w * 0.15));
-        if (!aH) aH = aW;
-        if (!dW) dW = Math.min(110, Math.max(78, w * 0.2));
-        if (!dH) dH = dW;
-        if (!pW) pW = Math.min(160, Math.max(100, w * 0.25));
-        if (!pH) pH = pW;
-        return { president: Math.max(pW, pH), director: Math.max(dW, dH), area: Math.max(aW, aH) };
+        if (!aW) aW = Math.min(140, Math.max(96, w * 0.18));
+        if (!aH) aH = Math.min(56, Math.max(38, aW * 0.4));
+        if (!dW) dW = Math.min(140, Math.max(96, w * 0.18));
+        if (!dH) dH = Math.min(60, Math.max(40, dW * 0.4));
+        if (!pW) pW = Math.min(160, Math.max(108, w * 0.2));
+        if (!pH) pH = Math.min(72, Math.max(46, pW * 0.42));
+        return {
+          president: Math.max(pW, pH),
+          director: Math.max(dW, dH),
+          area: Math.max(aW, aH),
+          presW: pW, presH: pH,
+          dirW: dW, dirH: dH,
+          areaW: aW, areaH: aH,
+        };
       }
 
-      function getChartMaxBox() {
-        var inner = document.querySelector(".app__inner");
-        var maxW = inner ? Math.floor(inner.getBoundingClientRect().width) : 640;
-        return { w: maxW, h: Math.min(window.innerHeight * 0.92, 1100) };
-      }
-
-      function ringRadiusNeed() {
+      function columnLayout() {
         var D = measureDiameters();
-        var sinH = Math.sin(Math.PI / n);
-        var rPeer = (D.director + G) / (2 * sinH);
-        var rPr = D.president / 2 + D.director / 2 + G;
-        return Math.max(rPeer, rPr) * 1.05;
-      }
-
-      function applyHubMinForRing() {
-        /* O anel ajusta o raio a esta caixa; não se altera minHeight/minWidth (evita salto do centro). */
-      }
-
-      function directorRingRadiusPx() {
-        var need = ringRadiusNeed();
-        var D = measureDiameters();
-        var pad = 14;
-        var capBox = getChartMaxBox();
-        var stage = hubStage || hub;
-        var w = stage ? Math.min(stage.clientWidth, capBox.w) : 0;
-        var h = stage ? Math.min(stage.clientHeight, capBox.h) : 0;
-        if (!w) w = hub && hub.clientWidth ? hub.clientWidth : 400;
-        if (!h) h = hub && hub.clientHeight ? hub.clientHeight : 400;
-        var capR = Math.min(w, h) / 2 - D.director / 2 - pad;
-        return Math.min(need, Math.max(0, capR));
-      }
-
-      function positions() {
-        var r = directorRingRadiusPx();
-        var out = [];
-        var RING_TURN = (2 * Math.PI / n) * 2.5;
-        for (var i = 0; i < n; i++) {
-          var angle = (i / n) * Math.PI * 2 - Math.PI / 2 + RING_TURN;
-          out.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
-        }
-        return out;
-      }
-
-      /** Espaço mínimo (px) entre as bordas de duas bolas de área (não podem encostar). */
-      var G_AREA_TO_AREA = 18;
-      /** Espaço mínimo (px) entre a borda de uma área e a do presidente / de qualquer diretor. */
-      var G_AREA_TO_DIRECTOR = 28;
-      var PRES = { x: 0, y: 0 };
-
-      function minCenterDistToDirector(D) {
-        return D.area / 2 + D.director / 2 + G_AREA_TO_DIRECTOR + 2;
-      }
-      function minCenterDistToPresident(D) {
-        return D.area / 2 + D.president / 2 + G_AREA_TO_DIRECTOR + 2;
-      }
-
-      function areaLayoutRandomOk(points, D, allDirectorPos) {
-        var dA = D.area;
-        var dDir = minCenterDistToDirector(D);
-        var dPres = minCenterDistToPresident(D);
-        for (var a = 0; a < points.length; a++) {
-          var p = points[a];
-          if (dist(p, PRES) < dPres) return false;
-          for (var di = 0; di < allDirectorPos.length; di++) {
-            if (dist(p, allDirectorPos[di]) < dDir) return false;
-          }
-          for (var b = a + 1; b < points.length; b++) {
-            if (dist(p, points[b]) < dA + G_AREA_TO_AREA) return false;
-          }
-        }
-        return true;
-      }
-
-      function nudgePlacedToValid(placed, D, allDirPos, halfX, halfY) {
-        if (!placed.length) return placed;
-        var copy = placed.map(function (pt) { return { x: pt.x, y: pt.y }; });
-        for (var round = 0; round < 120; round++) {
-          if (areaLayoutRandomOk(copy, D, allDirPos)) return copy;
-          var j = round % copy.length;
-          for (var t = 0; t < 35; t++) {
-            var nx = (Math.random() * 2 - 1) * halfX;
-            var ny = (Math.random() * 2 - 1) * halfY;
-            var trial = copy.slice();
-            trial[j] = { x: nx, y: ny };
-            if (areaLayoutRandomOk(trial, D, allDirPos)) {
-              copy = trial;
-              break;
-            }
-          }
-        }
-        return copy;
-      }
-
-      /** Afasta projeção dos centros: presidente, todos os diretores e pares (área–área) até cumprir mínimos. */
-      function relaxAreaLayout(placed, D, allDirPos, halfX, halfY) {
-        if (!placed.length) return placed;
-        var dA = D.area;
-        var dDirT = minCenterDistToDirector(D);
-        var dPresT = minCenterDistToPresident(D);
-        var minPair = dA + G_AREA_TO_AREA;
-        var out = placed.map(function (p) { return { x: p.x, y: p.y }; });
-        for (var iter = 0; iter < 420; iter++) {
-          for (var a = 0; a < out.length; a++) {
-            var p = out[a];
-            var d0p = dist(p, PRES);
-            if (d0p < dPresT) {
-              if (d0p < 1e-4) { p.x = dPresT; p.y = 0; }
-              else { var s1 = dPresT / d0p; p.x *= s1; p.y *= s1; }
-            }
-            for (var di = 0; di < allDirPos.length; di++) {
-              var c = allDirPos[di];
-              var ddc = dist(p, c);
-              if (ddc < dDirT) {
-                if (ddc < 1e-4) { p.x = c.x + dDirT; p.y = c.y; }
-                else { var t2 = dDirT / ddc; p.x = c.x + (p.x - c.x) * t2; p.y = c.y + (p.y - c.y) * t2; }
-              }
-            }
-          }
-          for (var a = 0; a < out.length; a++) {
-            for (var b = a + 1; b < out.length; b++) {
-              var p2 = out[a];
-              var q = out[b];
-              var ddc2 = dist(p2, q);
-              if (ddc2 < minPair) {
-                if (ddc2 < 1e-5) { p2.x += 3; p2.y += 0.5; }
-                else {
-                  var pushH = (minPair - ddc2) / 2;
-                  var nxx = (p2.x - q.x) / ddc2;
-                  var nyy = (p2.y - q.y) / ddc2;
-                  p2.x += nxx * pushH; p2.y += nyy * pushH;
-                  q.x -= nxx * pushH; q.y -= nyy * pushH;
-                }
-              }
-            }
-          }
-          for (var a = 0; a < out.length; a++) {
-            out[a].x = Math.max(-halfX, Math.min(halfX, out[a].x));
-            out[a].y = Math.max(-halfY, Math.min(halfY, out[a].y));
-          }
-          if (areaLayoutRandomOk(out, D, allDirPos)) return out;
-        }
-        return out;
-      }
-
-      function computeRandomAreaPointsImpl(m, selDirIdx) {
-        if (m <= 0) return [];
-        if (selDirIdx === undefined || selDirIdx === null) selDirIdx = 0;
-        var D = measureDiameters();
-        var allDirPos = positions();
         var st = hubStage || hub;
         var w = (st && st.clientWidth) || 400;
         var h = (st && st.clientHeight) || 400;
-        var rA = D.area / 2;
-        var edgePad = rA + 6;
-        var halfX = Math.max(80, w * 0.5 - edgePad);
-        var halfY = Math.max(80, h * 0.5 - edgePad);
-        var posActive = allDirPos[selDirIdx] || { x: 0, y: 1 };
-        var awayAng = Math.atan2(-posActive.y, -posActive.x);
-        var placed = [];
-        var maxTries = m > 16 ? 4500 : m > 8 ? 2800 : 1500;
-        for (var j = 0; j < m; j++) {
-          var found = null;
-          var baseAng = awayAng + (j / m) * (1.3 * Math.PI) + (Math.random() - 0.5) * 0.9 + Math.random() * 0.4;
-          for (var t = 0; t < maxTries; t++) {
-            var ang = baseAng + (Math.random() - 0.5) * 1.35;
-            var rad = 0.38 + Math.random() * 0.62;
-            if (t % 4 === 0) rad = 0.15 + Math.random() * 0.85;
-            var rx = Math.cos(ang) * rad * halfX;
-            var ry = Math.sin(ang) * rad * halfY;
-            if (t % 6 === 0) {
-              var ja = (Math.random() * 2) * Math.PI;
-              var jr = 0.22 + Math.random() * 0.78;
-              rx = Math.cos(ja) * jr * halfX;
-              ry = Math.sin(ja) * jr * halfY;
-            }
-            var cand = { x: rx, y: ry };
-            if (areaLayoutRandomOk(placed.concat([cand]), D, allDirPos)) {
-              found = cand;
-              break;
-            }
+        var mEdge = Math.max(16, Math.min(28, w * 0.025));
+        var colGap = Math.max(36, Math.min(96, w * 0.085));
+        var pW = D.presW;
+        var dW = D.dirW;
+        var dH = D.dirH;
+        var aW = D.areaW;
+        var presX = -w * 0.5 + mEdge + pW * 0.5;
+        var presY = 0;
+        var dirColX = presX + pW * 0.5 + colGap + dW * 0.5;
+        var areaColX = dirColX + dW * 0.5 + colGap + aW * 0.5;
+        var nDir = n;
+        var vGap = Math.max(18, dH * 0.55);
+        var step = dH + vGap;
+        if (nDir > 1) {
+          var minStep = dH + 6;
+          var maxH = h - 2 * mEdge;
+          var need = (nDir - 1) * step + dH;
+          if (need > maxH) {
+            var stepMin = (maxH - dH) / (nDir - 1);
+            step = Math.max(minStep, stepMin);
           }
-          if (found) {
-            placed.push(found);
-          } else {
-            var cols = Math.ceil(Math.sqrt(m * 1.2));
-            var rows = Math.ceil(m / cols);
-            var r = Math.floor(j / cols);
-            var c = j % cols;
-            var oang = awayAng - 0.4 * Math.PI + ((c + 0.5) / cols) * 0.8 * Math.PI;
-            var orad = 0.55 + (r + 0.5) / rows * 0.4;
-            placed.push({
-              x: Math.cos(oang) * orad * halfX + (Math.random() - 0.5) * 20,
-              y: Math.sin(oang) * orad * halfY + (Math.random() - 0.5) * 20,
-            });
-          }
+        } else {
+          step = 0;
         }
-        placed = nudgePlacedToValid(placed, D, allDirPos, halfX, halfY);
-        placed = relaxAreaLayout(placed, D, allDirPos, halfX, halfY);
-        if (placed.length && !areaLayoutRandomOk(placed, D, allDirPos)) {
-          placed = [];
-          var c2 = Math.ceil(Math.sqrt(m * 1.15));
-          var r2 = Math.ceil(m / c2);
-          for (var j2 = 0; j2 < m; j2++) {
-            var rr = Math.floor(j2 / c2);
-            var cc = j2 % c2;
-            var fang = awayAng - 0.5 * Math.PI + ((cc + 0.5) / c2) * Math.PI;
-            var fr = 0.4 + (rr + 0.5) / r2 * 0.55;
-            placed.push({ x: Math.cos(fang) * fr * halfX, y: Math.sin(fang) * fr * halfY });
-          }
-          placed = nudgePlacedToValid(placed, D, allDirPos, halfX, halfY);
-          placed = relaxAreaLayout(placed, D, allDirPos, halfX, halfY);
+        var dirs = [];
+        for (var i = 0; i < nDir; i++) {
+          var yi = (i - (nDir - 1) * 0.5) * step;
+          dirs.push({ x: dirColX, y: yi });
         }
-        return placed;
+        return {
+          pres: { x: presX, y: presY },
+          dirs: dirs,
+          areaColX: areaColX,
+          w: w,
+          h: h,
+          mEdge: mEdge,
+          D: D,
+          step: step,
+        };
       }
 
-      function computeRandomAreaPoints(m, selDirIdx) {
-        return computeRandomAreaPointsImpl(m, selDirIdx);
+      function applyHubMinForRing() {
+        /* compat: anel legado; layout em coluna não fixa minWidth no JS */
+      }
+
+      function positions() {
+        return columnLayout().dirs;
+      }
+
+      function computeColumnAreaPoints(m, directorIndex) {
+        if (m <= 0) return [];
+        var L = columnLayout();
+        var y0 = (L.dirs[directorIndex] && L.dirs[directorIndex].y) || 0;
+        var x = L.areaColX;
+        var aH = L.D.areaH;
+        var agap = Math.max(14, aH * 0.36);
+        var mE = L.mEdge;
+        var h2 = L.h * 0.5;
+        var ymin = -h2 + mE + aH * 0.5;
+        var ymax = h2 - mE - aH * 0.5;
+        var step2 = aH + agap;
+        if (m > 1) {
+          /* Só comprime se não couber no hub (caso muito raro com 3+ áreas). */
+          var totalAvail = ymax - ymin;
+          var totalNeeded = (m - 1) * step2 + aH;
+          if (totalNeeded > totalAvail) {
+            step2 = Math.max(aH + 6, (totalAvail - aH) / (m - 1));
+          }
+        }
+        var out = [];
+        for (var j = 0; j < m; j++) {
+          var yj = y0 + (j - (m - 1) * 0.5) * step2;
+          yj = Math.max(ymin, Math.min(ymax, yj));
+          out.push({ x: x, y: yj });
+        }
+        /* Após o clamp pelas bordas do hub, força o espaçamento mínimo entre
+           áreas adjacentes. Sem isso, no topo (1.º diretor) e no fundo (último),
+           várias áreas eram "empurradas" para a mesma linha e sobrepunham-se. */
+        for (var k = 1; k < out.length; k++) {
+          var lo = out[k - 1].y + step2;
+          if (out[k].y < lo) out[k].y = Math.min(ymax, lo);
+        }
+        for (var k2 = out.length - 2; k2 >= 0; k2--) {
+          var hi = out[k2 + 1].y - step2;
+          if (out[k2].y > hi) out[k2].y = Math.max(ymin, hi);
+        }
+        return out;
+      }
+
+      function lineColorForConnectors() {
+        return document.documentElement.getAttribute("data-theme") === "light"
+          ? "rgba(100, 95, 88, 0.42)"
+          : "rgba(150, 145, 135, 0.5)";
+      }
+
+      function buildCurveD(x1, y1, x2, y2) {
+        var dx = Math.max(24, Math.abs(x2 - x1) * 0.55);
+        return (
+          "M" + x1 + "," + y1 +
+          " C" + (x1 + dx) + "," + y1 + " " + (x2 - dx) + "," + y2 + " " + x2 + "," + y2
+        );
+      }
+
+      function ensureConnectorsViewBox() {
+        if (!orgConnectors || !hubStage) return false;
+        var w = hubStage.clientWidth;
+        var h = hubStage.clientHeight;
+        if (w < 1 || h < 1) return false;
+        orgConnectors.setAttribute("viewBox", "0 0 " + w + " " + h);
+        orgConnectors.setAttribute("width", String(w));
+        orgConnectors.setAttribute("height", String(h));
+        return true;
+      }
+
+      /** Pontos de saída do presidente / entrada de cada diretor, em coords do palco. */
+      function presOutputPoint(L) {
+        return { x: L.w / 2 + L.pres.x + L.D.presW / 2, y: L.h / 2 + L.pres.y };
+      }
+      function dirInputPoint(L, i) {
+        var dp = L.dirs[i];
+        return { x: L.w / 2 + dp.x - L.D.dirW / 2, y: L.h / 2 + dp.y };
+      }
+
+      /**
+       * Desenha as linhas presidente→diretores e revela cada diretor à medida que a
+       * sua linha se completa (mascarando com stroke-dasharray).
+       */
+      function animateConnectorsAndDirectors() {
+        if (!ensureConnectorsViewBox()) return null;
+        var ns = "http://www.w3.org/2000/svg";
+        orgConnectors.innerHTML = "";
+        var L = columnLayout();
+        var stroke = lineColorForConnectors();
+        var pOut = presOutputPoint(L);
+        var lineDur = 0.55;
+        var stagger = 0.07;
+        var tl = gsap.timeline();
+        for (var i = 0; i < directors.length; i++) {
+          var pIn = dirInputPoint(L, i);
+          var d = buildCurveD(pOut.x, pOut.y, pIn.x, pIn.y);
+          var path = document.createElementNS(ns, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("stroke", stroke);
+          path.setAttribute("stroke-width", "1");
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke-linecap", "round");
+          path.setAttribute("data-kind", "pres-dir");
+          orgConnectors.appendChild(path);
+          var len = 0;
+          try { len = path.getTotalLength(); } catch (e) { len = 0; }
+          if (!len || !isFinite(len)) len = Math.hypot(pIn.x - pOut.x, pIn.y - pOut.y);
+          path.style.strokeDasharray = String(len);
+          path.style.strokeDashoffset = String(len);
+          var t0 = i * stagger;
+          tl.fromTo(
+            path,
+            { strokeDashoffset: len },
+            {
+              strokeDashoffset: 0,
+              duration: lineDur,
+              ease: "power2.inOut",
+              overwrite: "auto",
+              immediateRender: false,
+            },
+            t0
+          );
+          var dirEl = directors[i];
+          var dp = L.dirs[i];
+          tl.fromTo(
+            dirEl,
+            { x: pIn.x - L.w / 2, y: pIn.y - L.h / 2, scale: 0.45, opacity: 0 },
+            {
+              x: dp.x,
+              y: dp.y,
+              scale: 1,
+              opacity: 1,
+              duration: 0.45,
+              ease: "back.out(1.4)",
+              overwrite: "auto",
+              immediateRender: false,
+            },
+            t0 + lineDur * 0.7
+          );
+        }
+        return tl;
+      }
+
+      function scheduleOrgConnectors() {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(updateOrgConnectors);
+          });
+        } else {
+          setTimeout(updateOrgConnectors, 0);
+        }
+      }
+
+      function updateOrgConnectors() {
+        if (!orgConnectors || !hubStage) return;
+        if (isExpanding || isCollapsing || isAreaAnimating) return;
+        var ns = "http://www.w3.org/2000/svg";
+        orgConnectors.innerHTML = "";
+        if (!expanded) return;
+        var w = hubStage.clientWidth;
+        var h = hubStage.clientHeight;
+        if (w < 1 || h < 1) return;
+        orgConnectors.setAttribute("viewBox", "0 0 " + w + " " + h);
+        orgConnectors.setAttribute("width", String(w));
+        orgConnectors.setAttribute("height", String(h));
+        var hbr = hubStage.getBoundingClientRect();
+        function rectOf(el) {
+          if (!el) return null;
+          var r = el.getBoundingClientRect();
+          return {
+            left: r.left - hbr.left,
+            right: r.right - hbr.left,
+            top: r.top - hbr.top,
+            bottom: r.bottom - hbr.top,
+            cy: r.top - hbr.top + r.height / 2,
+            cx: r.left - hbr.left + r.width / 2,
+          };
+        }
+        var stroke = lineColorForConnectors();
+        function appendCurve(x1, y1, x2, y2, kind) {
+          var d = buildCurveD(x1, y1, x2, y2);
+          var p = document.createElementNS(ns, "path");
+          p.setAttribute("d", d);
+          p.setAttribute("stroke", stroke);
+          p.setAttribute("stroke-width", "1");
+          p.setAttribute("fill", "none");
+          p.setAttribute("stroke-linecap", "round");
+          if (kind) p.setAttribute("data-kind", kind);
+          orgConnectors.appendChild(p);
+          try {
+            var len = p.getTotalLength();
+            if (len && isFinite(len)) {
+              p.style.strokeDasharray = String(len);
+              p.style.strokeDashoffset = "0";
+            }
+          } catch (e) {}
+        }
+        var pr = rectOf(president);
+        if (!pr) return;
+        var pOut = { x: pr.right, y: pr.cy };
+        for (var i = 0; i < directors.length; i++) {
+          var dr = rectOf(directors[i]);
+          if (!dr) continue;
+          appendCurve(pOut.x, pOut.y, dr.left, dr.cy, "pres-dir");
+        }
+        if (!isMobileLayout() && areaBalls && areaBalls.length && selectedDir !== null) {
+          var drc = rectOf(directors[selectedDir]);
+          if (drc) {
+            for (var j = 0; j < areaBalls.length; j++) {
+              var ar = rectOf(areaBalls[j]);
+              if (!ar) continue;
+              appendCurve(drc.right, drc.cy, ar.left, ar.cy, "dir-area");
+            }
+          }
+        }
+      }
+
+      /**
+       * Desenha as linhas diretor→área (máscara stroke-dashoffset) e revela cada bola
+       * de área ao final do percurso. Retorna um GSAP timeline. Só é usada em desktop.
+       */
+      function animateConnectorsAndAreas(directorIndex, slots) {
+        if (!ensureConnectorsViewBox()) return null;
+        if (!areaBalls || !areaBalls.length || !slots) return null;
+        var ns = "http://www.w3.org/2000/svg";
+        if (orgConnectors) {
+          var oldAreaPaths = orgConnectors.querySelectorAll('[data-kind="dir-area"]');
+          for (var k = 0; k < oldAreaPaths.length; k++) oldAreaPaths[k].remove();
+        }
+        var L = columnLayout();
+        var dp = L.dirs[directorIndex];
+        if (!dp) return null;
+        var stroke = lineColorForConnectors();
+        var pOut = { x: L.w / 2 + dp.x + L.D.dirW / 2, y: L.h / 2 + dp.y };
+        var lineDur = 0.5;
+        var stagger = 0.06;
+        var tl = gsap.timeline();
+        for (var i = 0; i < areaBalls.length; i++) {
+          var slot = slots[i];
+          if (!slot) continue;
+          var pIn = { x: L.w / 2 + slot.x - L.D.areaW / 2, y: L.h / 2 + slot.y };
+          var d = buildCurveD(pOut.x, pOut.y, pIn.x, pIn.y);
+          var path = document.createElementNS(ns, "path");
+          path.setAttribute("d", d);
+          path.setAttribute("stroke", stroke);
+          path.setAttribute("stroke-width", "1");
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke-linecap", "round");
+          path.setAttribute("data-kind", "dir-area");
+          orgConnectors.appendChild(path);
+          var len = 0;
+          try { len = path.getTotalLength(); } catch (e) { len = 0; }
+          if (!len || !isFinite(len)) len = Math.hypot(pIn.x - pOut.x, pIn.y - pOut.y);
+          path.style.strokeDasharray = String(len);
+          path.style.strokeDashoffset = String(len);
+          var t0 = i * stagger;
+          tl.fromTo(
+            path,
+            { strokeDashoffset: len },
+            {
+              strokeDashoffset: 0,
+              duration: lineDur,
+              ease: "power2.inOut",
+              overwrite: "auto",
+              immediateRender: false,
+            },
+            t0
+          );
+          var areaEl = areaBalls[i];
+          tl.fromTo(
+            areaEl,
+            { x: pIn.x - L.w / 2, y: pIn.y - L.h / 2, scale: 0.45, opacity: 0 },
+            {
+              x: slot.x,
+              y: slot.y,
+              scale: 1,
+              opacity: 1,
+              duration: 0.4,
+              ease: "back.out(1.4)",
+              overwrite: "auto",
+              immediateRender: false,
+            },
+            t0 + lineDur * 0.7
+          );
+        }
+        return tl;
       }
 
       function findAreaMeta(areaId) {
@@ -520,8 +641,7 @@
         hub.classList.remove("has-areas");
         selectedDir = null;
         setDirectorSelected(-1);
-        areaSlotsBase = null;
-        hubSizeBase = null;
+        scheduleOrgConnectors();
       }
 
       /** Anima as bolas de área de volta ao diretor (espelha a abertura, em ordem inversa). Retorna null se não houver o que recolher. */
@@ -550,7 +670,11 @@
         if (!posD) return null;
         var n = areaBalls.length;
         var tl = gsap.timeline();
+        var dirAreaPaths = orgConnectors
+          ? [].slice.call(orgConnectors.querySelectorAll('[data-kind="dir-area"]'))
+          : [];
         areaBalls.forEach(function (el, j) {
+          var t0 = (n - 1 - j) * AREA_STAGGER;
           tl.to(
             el,
             {
@@ -562,8 +686,28 @@
               ease: "power2.in",
               overwrite: "auto",
             },
-            (n - 1 - j) * AREA_STAGGER
+            t0
           );
+          var path = dirAreaPaths[j];
+          if (path) {
+            var len = 0;
+            try { len = path.getTotalLength(); } catch (e) { len = 0; }
+            if (!len || !isFinite(len)) len = 200;
+            if (!path.style.strokeDasharray) {
+              path.style.strokeDasharray = String(len);
+              path.style.strokeDashoffset = "0";
+            }
+            tl.to(
+              path,
+              {
+                strokeDashoffset: len,
+                duration: AREA_TWEEN_DUR,
+                ease: "power2.in",
+                overwrite: "auto",
+              },
+              t0
+            );
+          }
         });
         return tl;
       }
@@ -575,9 +719,9 @@
         var order = directors
           .map(function (el) {
             var r = el.getBoundingClientRect();
-            return { el: el, x: r.left + r.width / 2 };
+            return { el: el, y: r.top + r.height / 2 };
           })
-          .sort(function (a, b) { return a.x - b.x; });
+          .sort(function (a, b) { return a.y - b.y; });
         var step = 0.08;
         var peak = 1.06;
         var up = 0.2;
@@ -615,14 +759,7 @@
         void hub.offsetWidth;
         directorsPulseLeftToRight();
         var posD = positions()[directorIndex];
-        var slots = mobile ? null : computeRandomAreaPoints(m, directorIndex);
-        if (!mobile && slots) {
-          areaSlotsBase = slots.map(function (p) { return { x: p.x, y: p.y }; });
-          hubSizeBase = { w: hub.clientWidth || 1, h: hub.clientHeight || 1 };
-        } else {
-          areaSlotsBase = null;
-          hubSizeBase = null;
-        }
+        var slots = mobile ? null : computeColumnAreaPoints(m, directorIndex);
         selectedDir = directorIndex;
         setDirectorSelected(directorIndex);
         data.areas.forEach(function (arObj, j) {
@@ -652,8 +789,8 @@
             },
           });
         } else {
-          /* Sai do diretor já visível e cresce de forma alinhada ao percurso até o tamanho final no slot. */
-          var areaStartScale = 0.3;
+          /* Desktop: linhas surgem com máscara (stroke-dashoffset) saindo do diretor
+             e a bola da área aparece ao final do percurso. */
           gsap.set(areaBalls, {
             x: posD.x,
             y: posD.y,
@@ -662,34 +799,40 @@
             left: "50%",
             top: "50%",
             transformOrigin: "50% 50%",
-            scale: areaStartScale,
-            opacity: 0.9,
+            scale: 0.3,
+            opacity: 0,
             rotation: 0,
           });
-          areaBalls.forEach(function (el, j) {
-            if (!slots || !slots[j]) return;
-            var tx = slots[j].x;
-            var ty = slots[j].y;
-            gsap.to(el, {
-              x: tx,
-              y: ty,
-              scale: 1,
-              opacity: 1,
-              duration: AREA_TWEEN_DUR,
-              delay: j * AREA_STAGGER,
-              ease: "power2.out",
-              rotation: 0,
-              overwrite: "auto",
-              onStart: function () {
-                if (j === 0) areaLayer.setAttribute("aria-hidden", "false");
-              },
+          if (areaLayer) areaLayer.setAttribute("aria-hidden", "false");
+          isAreaAnimating = true;
+          var tok = ++areaAnimToken;
+          var tlAreaIn = animateConnectorsAndAreas(directorIndex, slots);
+          if (tlAreaIn) {
+            tlAreaIn.eventCallback("onComplete", function () {
+              if (tok === areaAnimToken) isAreaAnimating = false;
             });
-          });
+          } else {
+            isAreaAnimating = false;
+            areaBalls.forEach(function (el, j) {
+              if (!slots || !slots[j]) return;
+              gsap.to(el, {
+                x: slots[j].x,
+                y: slots[j].y,
+                scale: 1,
+                opacity: 1,
+                duration: AREA_TWEEN_DUR,
+                delay: j * AREA_STAGGER,
+                ease: "power2.out",
+                overwrite: "auto",
+              });
+            });
+          }
         }
 
         areaBalls.forEach(function (el) {
           el.addEventListener("click", onAreaClick);
         });
+        if (mobile) setTimeout(scheduleOrgConnectors, 420);
       }
 
       function onAreaClick(e) {
@@ -721,15 +864,19 @@
           if (areaBalls.length) {
             if (busy) return;
             busy = true;
+            isAreaAnimating = true;
+            areaAnimToken++;
             var tlA = buildAreaRetractTimeline();
             if (tlA) {
               tlA.eventCallback("onComplete", function () {
+                isAreaAnimating = false;
                 destroyAreaBalls();
                 if (hint) hint.textContent = "";
                 busy = false;
               });
               tlA.play(0);
             } else {
+              isAreaAnimating = false;
               destroyAreaBalls();
               if (hint) hint.textContent = "";
               busy = false;
@@ -772,69 +919,181 @@
         scale: 0, opacity: 0, rotation: 0, transformOrigin: "50% 50%",
       });
 
-      function animateDirectorsToCenter() {
-        var collapseOnly = gsap.timeline({ onComplete: function () { busy = false; } });
-        var order = [3, 1, 5, 0, 4, 2, 6];
-        order.forEach(function (idx, seq) {
-          var el = directors[idx];
-          collapseOnly.to(
-            el,
-            { x: 0, y: 0, scale: 0, opacity: 0, rotation: 0, duration: 0.6, ease: "power2.in" },
-            seq * 0.04
-          );
+      if (president) {
+        gsap.set(president, {
+          x: 0, y: 0, xPercent: -50, yPercent: -50, left: "50%", top: "50%",
+          scale: 1, opacity: 1, rotation: 0, transformOrigin: "50% 50%",
         });
-        collapseOnly.to(president, { scale: 0.95, rotation: 6, duration: 0.16, ease: "sine.in", overwrite: "auto" }, 0.06);
-        collapseOnly.to(president, { scale: 1, rotation: 0, duration: 0.38, ease: "sine.out" }, 0.2);
-        collapseOnly.play(0);
+      }
+
+      /**
+       * Espelha a expansão: as linhas retraem-se (dashoffset 0 → len) enquanto cada
+       * diretor encolhe na direção do presidente, em ordem inversa (de baixo para cima).
+       */
+      function animateRetractToPresident() {
+        if (!orgConnectors) return null;
+        var L = columnLayout();
+        var pOut = presOutputPoint(L);
+        var paths = [].slice.call(orgConnectors.querySelectorAll('[data-kind="pres-dir"]'));
+        var tl = gsap.timeline();
+        var lineDur = 0.5;
+        var stagger = 0.06;
+        var nDir = directors.length;
+        for (var k = 0; k < nDir; k++) {
+          var i = nDir - 1 - k;
+          var t0 = k * stagger;
+          var dirEl = directors[i];
+          var path = paths[i];
+          if (path) {
+            var len = 0;
+            try { len = path.getTotalLength(); } catch (e) { len = 0; }
+            if (!len || !isFinite(len) || len < 1) {
+              var dp0 = L.dirs[i];
+              var pIn0 = { x: L.w / 2 + dp0.x - L.D.dirW / 2, y: L.h / 2 + dp0.y };
+              len = Math.hypot(pIn0.x - pOut.x, pIn0.y - pOut.y);
+            }
+            if (!path.style.strokeDasharray) {
+              path.style.strokeDasharray = String(len);
+              path.style.strokeDashoffset = "0";
+            }
+            tl.to(
+              path,
+              { strokeDashoffset: len, duration: lineDur, ease: "power2.inOut", overwrite: "auto" },
+              t0
+            );
+          }
+          tl.to(
+            dirEl,
+            {
+              x: pOut.x - L.w / 2,
+              y: pOut.y - L.h / 2,
+              scale: 0,
+              opacity: 0,
+              duration: lineDur * 0.85,
+              ease: "power2.in",
+              overwrite: "auto",
+            },
+            t0 + lineDur * 0.1
+          );
+        }
+        return tl;
+      }
+
+      /** Cleanup das áreas (sem mexer nas linhas presidente↔diretor). */
+      function destroyAreaBallsKeepPresLines() {
+        areaBalls.forEach(function (b) { b.remove(); });
+        areaBalls = [];
+        var stray = (hub || document).querySelectorAll(".ball--area");
+        stray.forEach(function (b) { b.remove(); });
+        if (areaStrip) {
+          while (areaStrip.firstChild) areaStrip.removeChild(areaStrip.firstChild);
+          areaStrip.setAttribute("hidden", "");
+          areaStrip.setAttribute("aria-hidden", "true");
+        }
+        if (areaLayer) areaLayer.setAttribute("aria-hidden", "true");
+        hub.classList.remove("has-areas");
+        selectedDir = null;
+        setDirectorSelected(-1);
+        if (orgConnectors) {
+          var areaPaths = orgConnectors.querySelectorAll('[data-kind="dir-area"]');
+          for (var k = 0; k < areaPaths.length; k++) areaPaths[k].remove();
+        }
+      }
+
+      function runDirectorRetractAndPresidentReturn() {
+        var tlR = animateRetractToPresident();
+        var main = gsap.timeline({
+          onComplete: function () {
+            if (orgConnectors) orgConnectors.innerHTML = "";
+            gsap.set(directors, { x: 0, y: 0, scale: 0, opacity: 0, rotation: 0 });
+            isCollapsing = false;
+            busy = false;
+          },
+        });
+        if (tlR) {
+          main.add(tlR, 0);
+          main.to(
+            president,
+            { x: 0, y: 0, scale: 0.92, rotation: 0, duration: 0.45, ease: "power3.inOut", overwrite: "auto" },
+            ">-=0.05"
+          );
+          main.to(
+            president,
+            { scale: 1, duration: 0.3, ease: "back.out(1.6)" },
+            ">-=0.02"
+          );
+        } else {
+          gsap.set(directors, { x: 0, y: 0, scale: 0, opacity: 0, rotation: 0 });
+          main.to(
+            president,
+            { x: 0, y: 0, scale: 0.92, rotation: 0, duration: 0.45, ease: "power3.inOut", overwrite: "auto" },
+            0
+          );
+          main.to(president, { scale: 1, duration: 0.3, ease: "back.out(1.6)" }, ">-=0.02");
+        }
       }
 
       function playCollapse() {
         clearPanel();
+        isCollapsing = true;
         var tlAreas = buildAreaRetractTimeline();
+        var continueRetract = function () {
+          destroyAreaBallsKeepPresLines();
+          runDirectorRetractAndPresidentReturn();
+        };
         if (tlAreas) {
-          tlAreas.eventCallback("onComplete", function () {
-            destroyAreaBalls();
-            animateDirectorsToCenter();
-          });
+          tlAreas.eventCallback("onComplete", continueRetract);
           tlAreas.play(0);
         } else {
-          destroyAreaBalls();
-          animateDirectorsToCenter();
+          continueRetract();
         }
       }
 
       var expandOnce = function (posPre) {
         var pos = posPre;
         if (!pos || !pos.length) pos = positions();
-        var moveEase = "power2.out";
-        var tl = gsap.timeline({ onComplete: function () { busy = false; } });
-        /* Pulso leve do presidente ao expandir o anel (tamanho normal do gráfico; “shrink” só ao escolher área no CSS) */
-        tl.to(president, { scale: 1.04, rotation: 0, transformOrigin: "50% 50%", duration: 0.3, ease: "power2.out" }, 0);
-        tl.to(president, { scale: 1, duration: 0.35, ease: "power2.inOut" }, 0.3);
-        directors.forEach(function (el, i) {
-          var t = pos[i];
-          var delay = 0.08 + i * 0.06;
-          tl.to(
-            el,
-            {
-              x: t.x, y: t.y, scale: 1, opacity: 1,
-              rotation: 0,
-              duration: 0.85, ease: moveEase,
-            },
-            delay
-          );
+        var L = columnLayout();
+        if (orgConnectors) orgConnectors.innerHTML = "";
+        gsap.set(directors, { x: 0, y: 0, scale: 0, opacity: 0, rotation: 0 });
+        isExpanding = true;
+        var tl = gsap.timeline({
+          onComplete: function () { isExpanding = false; busy = false; },
         });
+        tl.set(
+          president,
+          { xPercent: -50, yPercent: -50, left: "50%", top: "50%", transformOrigin: "50% 50%" },
+          0
+        );
+        var presMoveDur = 0.6;
+        tl.to(
+          president,
+          { x: L.pres.x, y: L.pres.y, scale: 1.04, rotation: 0, duration: presMoveDur, ease: "power3.out" },
+          0
+        );
+        tl.to(
+          president,
+          { scale: 1, duration: 0.25, ease: "power2.inOut" },
+          presMoveDur
+        );
+        var subTl = animateConnectorsAndDirectors();
+        if (subTl) tl.add(subTl, presMoveDur + 0.08);
         return tl;
       };
 
       function handleResize() {
+        if (isExpanding || isCollapsing || isAreaAnimating) return;
         if (expanded) {
           applyHubMinForRing();
           void hub.offsetWidth;
+          var Lh = columnLayout();
+          if (president) {
+            gsap.set(president, { x: Lh.pres.x, y: Lh.pres.y, overwrite: "auto" });
+          }
           var pos = positions();
           directors.forEach(function (el, i) {
             gsap.to(el, { x: pos[i].x, y: pos[i].y, rotation: 0, duration: 0.45, ease: "power2.out", overwrite: "auto" });
           });
+          scheduleOrgConnectors();
         }
         var nowM = isMobileLayout();
         if (nowM !== lastMobileLayout) {
@@ -848,35 +1107,22 @@
               if (prevFou) showPanel(prevFou);
             }
           }
-        } else if (selectedDir !== null && areaBalls.length && areaSlotsBase && hubSizeBase) {
+        } else if (selectedDir !== null && areaBalls.length) {
           if (isMobileLayout()) return;
-          /* Em vez de sortear novas posições a cada resize (jitter), reescala as posições
-             originais pelo rácio do hub atual e relaxa para garantir que cabem sem
-             sobreposição. Resultado: a sanfona “puxa” o painel e as áreas acompanham
-             suavemente, sem corte e sem saltos. */
-          var st = hubStage || hub;
-          var w = (st && st.clientWidth) || hubSizeBase.w;
-          var h = (st && st.clientHeight) || hubSizeBase.h;
-          var s = Math.min(w / hubSizeBase.w, h / hubSizeBase.h);
-          var D2 = measureDiameters();
-          var allDirPos2 = positions();
-          var rA2 = D2.area / 2;
-          var edgePad2 = rA2 + 6;
-          var halfX2 = Math.max(80, w * 0.5 - edgePad2);
-          var halfY2 = Math.max(80, h * 0.5 - edgePad2);
-          var scaled = areaSlotsBase.map(function (p) { return { x: p.x * s, y: p.y * s }; });
-          var relaxed = relaxAreaLayout(scaled, D2, allDirPos2, halfX2, halfY2);
+          var m = areaBalls.length;
+          var slots3 = computeColumnAreaPoints(m, selectedDir);
           areaBalls.forEach(function (el, j) {
-            if (!relaxed[j]) return;
+            if (!slots3[j]) return;
             gsap.to(el, {
-              x: relaxed[j].x,
-              y: relaxed[j].y,
+              x: slots3[j].x,
+              y: slots3[j].y,
               rotation: 0,
               duration: 0.55,
               ease: "power2.out",
               overwrite: "auto",
             });
           });
+          scheduleOrgConnectors();
         }
       }
 

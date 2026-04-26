@@ -160,12 +160,7 @@
       transition: grid-template-columns 0.7s var(--acc-panel-ease);
     }
 
-    @media (min-width: 961px) {
-      /* Só com área ativa: coluna do painel alarga + #hub encolhe (sanfona). O organograma continua visível. */
-      .app--team-open {
-        grid-template-columns: minmax(0, 1fr) min(42vw, 440px);
-      }
-    }
+    /* Desktop: ao escolher uma área, NÃO redimensiona — painel/hub mantêm o tamanho. */
 
     .app-footer {
       flex-shrink: 0;
@@ -245,6 +240,10 @@
       align-items: stretch;
       overflow-anchor: none;
       box-sizing: border-box;
+    }
+
+    .app__inner:has(> .hub.is-expanded) {
+      max-width: min(100%, min(98vw, 1280px));
     }
 
     /* Cabeçalho fora de .app__inner: ocupa 100% da coluna do gráfico (não fica preso ao max-width 640px do inner). */
@@ -345,9 +344,9 @@
       position: relative;
       width: 100%;
       max-width: 100%;
-      height: min(76dvh, 800px);
-      min-height: min(72dvh, 640px);
-      max-height: min(80dvh, 820px);
+      height: min(82dvh, 880px);
+      min-height: min(76dvh, 700px);
+      max-height: min(86dvh, 900px);
       margin: 0 auto;
       display: block;
       overflow: hidden;
@@ -356,14 +355,10 @@
       transition: height 0.75s var(--acc-spring), min-height 0.75s var(--acc-spring), max-height 0.75s var(--acc-spring);
     }
 
-    /* Encolhimento real do hub (não transform): JS observa e reposiciona as bolas no novo raio */
-    @media (min-width: 961px) {
-      .app--team-open .hub {
-        height: min(58dvh, 580px);
-        min-height: min(54dvh, 480px);
-        max-height: min(62dvh, 600px);
-      }
+    .hub.is-expanded {
+      overflow: hidden;
     }
+
     @media (max-width: 960px) {
       .app--team-open .hub {
         min-height: 0;
@@ -443,11 +438,12 @@
       right: auto;
       bottom: auto;
       width: auto;
-      min-width: 4.25rem;
+      min-width: 5rem;
       max-width: 48%;
-      min-height: 2.5rem;
+      min-height: 2.4rem;
       height: auto;
       transform: none;
+      border-radius: 9999px;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -472,18 +468,34 @@
       font: inherit;
       color: var(--ball-fg);
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-      border-radius: 50%;
+      border-radius: 0.5rem;
       transform: translate(-50%, -50%);
       -webkit-tap-highlight-color: transparent;
       will-change: transform, opacity;
     }
 
-    /* Tamanho UNIFICADO para todas as bolas (presidente, diretores, áreas). */
-    .ball--president,
-    .ball--director,
+    .org-connectors {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* Retângulos arredondados (referência horizontal): largura ~ 2x altura. */
+    .ball--president {
+      width: clamp(108px, 14vw, 156px);
+      height: clamp(48px, 6vw, 64px);
+    }
+    .ball--director {
+      width: clamp(98px, 12vw, 136px);
+      height: clamp(40px, 5vw, 54px);
+    }
     .ball--area {
-      width: clamp(74px, 18vw, 100px);
-      height: clamp(74px, 18vw, 100px);
+      width: clamp(96px, 12vw, 136px);
+      height: clamp(38px, 4.6vw, 50px);
     }
 
     .ball--president {
@@ -491,22 +503,23 @@
       cursor: pointer;
       background: var(--node-president);
       box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
-      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
-      font-weight: 600;
+      font-size: clamp(0.62rem, 1.35vw, 0.78rem);
+      font-weight: 700;
       line-height: 1.15;
-      padding: 0.35rem 0.3rem;
+      padding: 0.35rem 0.55rem;
       flex-direction: column;
-      gap: 0.08rem;
+      gap: 0.05rem;
+      letter-spacing: 0.02em;
       word-break: break-word;
       hyphens: auto;
     }
 
     .ball__role {
-      font-size: 0.55em;
-      font-weight: 600;
-      letter-spacing: 0.06em;
+      font-size: 0.6em;
+      font-weight: 700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      opacity: 0.95;
+      opacity: 0.92;
     }
 
     .ball--president:hover {
@@ -515,10 +528,11 @@
 
     .ball--director {
       z-index: 12;
-      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
-      font-weight: 500;
-      line-height: 1.1;
-      padding: 0.3rem 0.25rem;
+      font-size: clamp(0.6rem, 1.25vw, 0.72rem);
+      font-weight: 600;
+      line-height: 1.15;
+      padding: 0.3rem 0.55rem;
+      letter-spacing: 0.02em;
       word-break: break-word;
       hyphens: auto;
       background: var(--node-director);
@@ -540,12 +554,13 @@
 
     .ball--area {
       z-index: 16;
-      font-size: clamp(0.5rem, 1.2vw, 0.62rem);
-      font-weight: 500;
-      line-height: 1.1;
+      font-size: clamp(0.55rem, 1.15vw, 0.68rem);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: 0.02em;
       word-break: break-word;
       hyphens: auto;
-      padding: 0.28rem;
+      padding: 0.28rem 0.5rem;
       background: var(--node-area);
       box-shadow: 0 0 0 1px var(--node-ring), var(--area-shadow);
       cursor: pointer;
@@ -887,9 +902,9 @@
     .overview__list .o-role { color: var(--text-muted); font-size: 0.85rem; }
 
     @media (max-width: 380px) {
-      .ball--president,
-      .ball--director,
-      .ball--area { width: 66px; height: 66px; font-size: 0.5rem; }
+      .ball--president { width: 100px; height: 44px; font-size: 0.55rem; }
+      .ball--director  { width: 92px;  height: 38px; font-size: 0.55rem; }
+      .ball--area      { width: 92px;  height: 36px; font-size: 0.5rem; }
     }
 
     .org-sizing-probe {
@@ -905,7 +920,7 @@
     .org-sizing-probe .ball { position: absolute; }
 
     .ball--director-probe {
-      width: clamp(74px, 18vw, 100px);
-      height: clamp(74px, 18vw, 100px);
-      font-size: clamp(0.55rem, 1.3vw, 0.68rem);
+      width: clamp(98px, 12vw, 136px);
+      height: clamp(40px, 5vw, 54px);
+      font-size: clamp(0.6rem, 1.25vw, 0.72rem);
     }
