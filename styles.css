@@ -651,7 +651,7 @@
     }
 
     .panel__body {
-      padding: 1rem max(0px, env(safe-area-inset-right, 0px)) 1.5rem 1.25rem;
+      padding: 1rem max(1.25rem, env(safe-area-inset-right, 1.25rem)) 1.5rem 1.25rem;
       overflow: auto;
       flex: 1;
     }
@@ -848,6 +848,11 @@
       font-size: 0.95rem;
       line-height: 1.55;
       color: var(--text-muted);
+      text-align: center;
+      text-wrap: balance;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
       border-top: 1px solid color-mix(in srgb, var(--node-blue) 25%, var(--list-border) 75%);
       background: color-mix(in srgb, var(--bg-0) 35%, var(--panel) 65%);
     }
