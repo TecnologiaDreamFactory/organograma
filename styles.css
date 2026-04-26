@@ -2,25 +2,35 @@
       --bg-0: #0c0b09;
       --bg-1: #151311;
       --panel: #141210;
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --text: #f2efe9;
-      --text-muted: #8f8980;
-      --text-subtle: #6a645c;
-      --text-strong: #faf7f2;
-      --list-border: rgba(255, 255, 255, 0.08);
-      --ball-fg: #f7f4ef;
-      /* Azul único (como o da área antes), sem gradiente — #2563eb ≈ meio entre #1d4ed8 e #3b82f6 */
-      --node-blue: #2563eb;
-      --node-blue-hover: #3b82f6;
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #faf8f4;
+      --text-muted: #c8c2b6;
+      --text-subtle: #a39a8c;
+      --text-strong: #ffffff;
+      --list-border: rgba(255, 255, 255, 0.1);
+      --ball-fg: #ffffff;
+      /* Dark: azul mais claro no default = destaque forte no fundo escuro + anel visível */
+      --node-blue: #3b82f6;
+      --node-blue-hover: #60a5fa;
       --node-president: var(--node-blue);
       --node-president-h: var(--node-blue-hover);
       --node-director: var(--node-blue);
       --node-area: var(--node-blue);
-      --node-ring: rgba(255, 255, 255, 0.18);
-      --node-ring-press: rgba(255, 255, 255, 0.38);
-      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 10px rgba(0, 0, 0, 0.35);
-      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 1px 4px rgba(0, 0, 0, 0.28);
+      --node-ring: rgba(255, 255, 255, 0.28);
+      --node-ring-press: rgba(255, 255, 255, 0.45);
+      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 2px 12px rgba(0, 0, 0, 0.42);
+      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 1px 5px rgba(0, 0, 0, 0.32);
       --area-focus: rgba(255, 255, 255, 0.95);
+      /* Anel externo fixo: “isso é clicável” sem depender só do preenchimento */
+      --node-focus-ring: 0 0 0 2px rgba(186, 230, 253, 0.55);
+      --node-on-blue-fg: #ffffff;
+      --node-hover-bg: #60a5fa;
+      --node-hover-outline: 0 0 0 2px rgba(255, 255, 255, 0.45), 0 4px 22px rgba(37, 99, 235, 0.45);
+      --node-active-bg: #172554;
+      --node-active-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      --node-selected-bg: #2563eb;
+      --node-selected-glow: 0 0 0 2px rgba(191, 219, 254, 0.85);
+      --focus-keyboard: #93c5fd;
       /* Alinhar título (organograma) e cabeçalho do painel na mesma faixa, em 2 colunas. */
       --app-title-line-h: clamp(1.75rem, 4.5vw, 2.5rem);
       --app-chart-pad-t: clamp(1.1rem, 2.6vh, 1.9rem);
@@ -30,29 +40,43 @@
       --acc-panel-ease: cubic-bezier(0.33, 1, 0.68, 1);
     }
 
+    /*
+      Light mode — “if theme === light” (só :root cai no dark).
+      Base azul mais escura (texto branco com contraste alto), anéis e sombras mais fortes
+      que o fundo creme, textos de apoio mais escuros.
+    */
     html[data-theme="light"] {
-      --bg-0: #f3efea;
-      --bg-1: #e8e2da;
-      --panel: #ffffff;
-      --panel-border: rgba(0, 0, 0, 0.1);
-      --text: #1a1815;
-      --text-muted: #5b544d;
-      --text-subtle: #756c64;
-      --text-strong: #0c0a08;
-      --list-border: rgba(0, 0, 0, 0.1);
-      --ball-fg: #fdf9f3;
-      --node-blue: #2563eb;
-      --node-blue-hover: #3b82f6;
+      --bg-0: #e6e0d8;
+      --bg-1: #d9d2c8;
+      --panel: #fcfcfa;
+      --panel-border: rgba(0, 0, 0, 0.18);
+      --text: #0c0a08;
+      --text-muted: #25211d;
+      --text-subtle: #3f3a35;
+      --text-strong: #000000;
+      --list-border: rgba(0, 0, 0, 0.16);
+      --ball-fg: #ffffff;
+      /* Azul blue-900 no default: máximo contraste com #fff; hover sobe o tom */
+      --node-blue: #1e3a8a;
+      --node-blue-hover: #1d4ed8;
       --node-president: var(--node-blue);
       --node-president-h: var(--node-blue-hover);
       --node-director: var(--node-blue);
       --node-area: var(--node-blue);
-      --node-ring: rgba(255, 255, 255, 0.22);
-      --node-ring-press: rgba(255, 255, 255, 0.4);
-      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 2px 8px rgba(0, 0, 0, 0.12);
-      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 1px 3px rgba(0, 0, 0, 0.1);
-      /* Seleção da área: contorno claro no dark, escuro no light (`.ball--area[aria-pressed="true"]`). */
-      --area-focus: rgba(12, 10, 8, 0.92);
+      --node-ring: rgba(255, 255, 255, 0.42);
+      --node-ring-press: rgba(255, 255, 255, 0.55);
+      --node-shadow: 0 1px 0 rgba(255, 255, 255, 0.28) inset, 0 1px 0 rgba(0, 0, 0, 0.08), 0 3px 12px rgba(15, 23, 42, 0.18);
+      --area-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 1px 0 rgba(0, 0, 0, 0.06), 0 2px 8px rgba(15, 23, 42, 0.12);
+      --area-focus: #020617;
+      --node-focus-ring: 0 0 0 3px rgba(15, 23, 42, 0.2);
+      --node-on-blue-fg: #ffffff;
+      --node-hover-bg: #1d4ed8;
+      --node-hover-outline: 0 0 0 2px #0f172a, 0 4px 20px rgba(15, 23, 42, 0.2);
+      --node-active-bg: #172554;
+      --node-active-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      --node-selected-bg: #1e40af;
+      --node-selected-glow: 0 0 0 2px #020617, 0 0 0 1px rgba(255, 255, 255, 0.35);
+      --focus-keyboard: #0f172a;
     }
 
     html { color-scheme: dark; -webkit-font-smoothing: antialiased; }
@@ -97,7 +121,15 @@
     }
 
     html[data-theme="light"] body {
-      background-image: linear-gradient(168deg, #f7f1ea 0%, var(--bg-0) 50%, #e5ddd4 100%);
+      /* Mesmas variáveis do tema claro: fundo um pouco mais “baixo” que o branco do painel. */
+      background-image: linear-gradient(168deg, var(--bg-1) 0%, var(--bg-0) 48%, #d2cbc2 100%);
+    }
+
+    /* Light: leitura nítida do texto claro em botões azuis escuros. */
+    html[data-theme="light"] .ball--president,
+    html[data-theme="light"] .ball--director,
+    html[data-theme="light"] .ball--area {
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
     }
 
     .theme-toggle {
@@ -111,7 +143,7 @@
       width: 2.5rem;
       height: 2.5rem;
       padding: 0;
-      border: 1px solid var(--panel-border);
+      border: 1px solid color-mix(in srgb, var(--text-muted) 28%, var(--panel-border));
       border-radius: 0.2rem;
       background: var(--panel);
       color: var(--text-muted);
@@ -123,6 +155,7 @@
     .theme-toggle:hover {
       color: var(--text);
       background: var(--bg-0);
+      border-color: color-mix(in srgb, var(--text) 22%, var(--panel-border));
     }
 
     .theme-toggle:active {
@@ -130,7 +163,7 @@
     }
 
     .theme-toggle:focus-visible {
-      outline: 2px solid var(--text-muted);
+      outline: 2px solid var(--focus-keyboard);
       outline-offset: 2px;
     }
 
@@ -175,7 +208,7 @@
       font-size: 0.72rem;
       font-weight: 500;
       letter-spacing: 0.02em;
-      color: var(--text-subtle);
+      color: var(--text-muted);
       border-top: 1px solid var(--panel-border);
       background: var(--bg-0);
     }
@@ -543,7 +576,8 @@
       z-index: 25;
       cursor: pointer;
       background: var(--node-president);
-      box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-focus-ring), 0 0 0 1px var(--node-ring), var(--node-shadow);
       font-size: clamp(0.62rem, 1.35vw, 0.78rem);
       font-weight: 700;
       line-height: 1.15;
@@ -565,6 +599,17 @@
 
     .ball--president:hover {
       background: var(--node-president-h);
+      box-shadow: var(--node-hover-outline);
+    }
+
+    .ball--president:focus-visible {
+      outline: 2px solid var(--focus-keyboard);
+      outline-offset: 3px;
+    }
+
+    .ball--president:active {
+      background: var(--node-active-bg);
+      box-shadow: var(--node-active-shadow);
     }
 
     .ball--director {
@@ -577,19 +622,68 @@
       word-break: break-word;
       hyphens: auto;
       background: var(--node-director);
-      box-shadow: 0 0 0 1px var(--node-ring), var(--node-shadow);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-focus-ring), 0 0 0 1px var(--node-ring), var(--node-shadow);
       cursor: pointer;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+      transition:
+        background 0.16s ease,
+        color 0.16s ease,
+        box-shadow 0.16s ease;
+    }
+
+    .ball--director:hover {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+    }
+
+    .ball--director:focus-visible {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+      outline: 2px solid var(--focus-keyboard);
+      outline-offset: 3px;
+    }
+
+    .ball--director:active {
+      background: var(--node-active-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-active-shadow);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
     }
 
     .ball--director[aria-pressed="true"] {
-      box-shadow: 0 0 0 2px var(--node-ring-press), var(--node-shadow);
+      background: var(--node-selected-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-selected-glow), 0 0 0 1px var(--node-ring), var(--node-shadow);
+    }
+
+    .ball--director[aria-pressed="true"]:hover {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+    }
+
+    .ball--director[aria-pressed="true"]:focus-visible {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+      outline: 2px solid var(--focus-keyboard);
+      outline-offset: 3px;
+    }
+
+    .ball--director[aria-pressed="true"]:active {
+      background: var(--node-active-bg);
+      box-shadow: var(--node-active-shadow);
     }
 
     .ball--director[data-index="6"] {
       z-index: 18;
     }
 
-    .ball--director:hover {
+    .ball--director:hover,
+    .ball--director:focus-visible {
       z-index: 22;
     }
 
@@ -603,18 +697,66 @@
       hyphens: auto;
       padding: 0.28rem 0.5rem;
       background: var(--node-area);
-      box-shadow: 0 0 0 1px var(--node-ring), var(--area-shadow);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-focus-ring), 0 0 0 1px var(--node-ring), var(--area-shadow);
       cursor: pointer;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+      transition:
+        background 0.16s ease,
+        color 0.16s ease,
+        box-shadow 0.16s ease;
+    }
+
+    .ball--area:hover {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+    }
+
+    .ball--area:focus-visible {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+      outline: 2px solid var(--focus-keyboard);
+      outline-offset: 3px;
+    }
+
+    .ball--area:active {
+      background: var(--node-active-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-active-shadow);
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
     }
 
     .ball--area[aria-pressed="true"] {
-      box-shadow: 0 0 0 2px var(--area-focus);
+      background: var(--node-selected-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-selected-glow), 0 0 0 1px var(--node-ring), var(--area-shadow);
+    }
+
+    .ball--area[aria-pressed="true"]:hover {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+    }
+
+    .ball--area[aria-pressed="true"]:focus-visible {
+      background: var(--node-hover-bg);
+      color: var(--node-on-blue-fg);
+      box-shadow: var(--node-hover-outline);
+      outline: 2px solid var(--focus-keyboard);
+      outline-offset: 3px;
+    }
+
+    .ball--area[aria-pressed="true"]:active {
+      background: var(--node-active-bg);
+      box-shadow: var(--node-active-shadow);
     }
 
     .hint {
       margin-top: clamp(0.4rem, 1.5vh, 0.8rem);
       font-size: clamp(0.65rem, 1.4vw, 0.78rem);
-      color: var(--text-subtle);
+      color: var(--text-muted);
       text-align: center;
       max-width: 360px;
       line-height: 1.35;
@@ -713,7 +855,7 @@
     }
 
     .panel__empty {
-      color: var(--text-subtle);
+      color: var(--text-muted);
       font-size: 0.9rem;
       line-height: 1.55;
     }
